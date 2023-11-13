@@ -38,6 +38,21 @@ Note: Use the production branch if you already have ./Configs
 ## 3. create mysql database
 fill information into [Configs/mysql.json](https://github.com/TZFC/BiliLiveManager/blob/main/Configs/mysql.json)
 
+create table credentials
+```
+CREATE TABLE credentials (user VARCHAR, sessdata VARCHAR, bili_jct VARCHAR, buvid3 VARCHAR, ac_time_value VARCHAR)
+```
+
+create table liveTime
+```
+CREATE TABLE credentials (room_id INT, start TIMESTAMP, end TIMESTAMP, summary VARCHAR)
+```
+
+create table danmu
+```
+CREATE TABLE danmu (name VARCHAR, uid INT, text VARCHAR, medal_id INT, medal_level INT, time TIMESTAMP, room_id INT)
+```
+
 ## 4. log into bilibili.com in **PRIVATE** browser window
 get credentials following [this guide](https://nemo2011.github.io/bilibili-api/#/get-credential)
 
