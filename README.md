@@ -76,7 +76,7 @@ Get gmail app password following [this guide](https://support.google.com/mail/an
 Fill your email address and app password into username and password fields of [Configs/masterCongid.json](https://github.com/TZFC/BiliLiveManager/blob/main/Configs/masterConfig.json)
 
 ## 6. Fill in which Stream to monitor
-Fill the room id into room_ids of [Configs/masterCongid.json](https://github.com/TZFC/BiliLiveManager/blob/main/Configs/masterConfig.json)
+Fill the room id into room_ids of [Configs/masterConfig.json](https://github.com/TZFC/BiliLiveManager/blob/main/Configs/masterConfig.json)
 
 Note: Put room id in quote!
 
