@@ -29,9 +29,10 @@ liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for 
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
 
-for liveDanmaku in liveDanmakus.values():
+def bind(room: LiveDanmaku):
+    __room = room
     # FIXME : Multi[le LIVE triggered, why?
-    @liveDanmaku.on("DANMU_MSG")
+    @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
         received_uid = event["data"]["info"][SENDER_INFO_IDX][SENDER_UID_IDX]
@@ -61,7 +62,7 @@ for liveDanmaku in liveDanmakus.values():
         mydb.commit()
 
 
-    @liveDanmaku.on("LIVE")
+    @__room.on("LIVE")
     async def liveStart(event):
         room_id = event['room_display_id']
         sql = "SELECT * FROM liveTime WHERE room_id = %s AND end IS NULL"
@@ -92,7 +93,7 @@ for liveDanmaku in liveDanmakus.values():
             mydb.commit()
 
 
-    @liveDanmaku.on("PREPARING")
+    @__room.on("PREPARING")
     async def liveEnd(event):
         room_id = event['room_display_id']
         # FIXME: duplicate LIVE events?
@@ -156,6 +157,9 @@ for liveDanmaku in liveDanmakus.values():
         with mydb.cursor() as cursor:
             cursor.execute(sql, val)
         mydb.commit()
+
+for room in liveDanmakus.values():
+    bind(room)
 
 if __name__ == "__main__":
     sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()]))
