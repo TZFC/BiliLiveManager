@@ -98,12 +98,12 @@ for liveDanmaku in liveDanmakus.values():
         # FIXME: duplicate LIVE events?
         # 删除重复开播记录
         with mydb.cursor() as cur:
-            sql = "SELECT * FROM liveTime WHERE room_id = %s"
+            sql = "SELECT * FROM liveTime WHERE room_id = %s AND summary IS NULL"
             val = (room_id,)
             cur.execute(sql, val)
             result = cur.fetchall()
             start = result[0][1]
-            sql = "DELETE FROM liveTime WHERE room_id = %s AND end IS NULL"
+            sql = "DELETE FROM liveTime WHERE room_id = %s AND summary IS NULL"
             val = (room_id,)
             cur.execute(sql, val)
             mydb.commit()
