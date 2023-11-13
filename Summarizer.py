@@ -9,7 +9,7 @@ def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
     keywords = roomConfig["keyword"]
     required_level = roomConfig["required_level"]
     if (text[:2] in keywords
-        and row[field_index["medal_id"]] == room_id
+        and str(row[field_index["medal_id"]]) == str(room_id)
         and row[field_index["medal_level"]] >= required_level):
         return True
     else:
