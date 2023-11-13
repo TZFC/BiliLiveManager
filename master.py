@@ -46,10 +46,10 @@ for liveDanmaku in liveDanmakus.values():
         val = (event["data"]["info"][SENDER_INFO_IDX][SENDER_USERNAME_IDX],
                received_uid,
                text,
-               event["data"]["info"][MEDAL_INFO_IDX][MEDAL_ROOMID_IDX] if event["data"]["info"][MEDAL_INFO_IDX][
-                   MEDAL_ROOMID_IDX] else 0,
-               event["data"]["info"][MEDAL_INFO_IDX][MEDAL_LEVEL_IDX] if event["data"]["info"][MEDAL_INFO_IDX][
-                   MEDAL_LEVEL_IDX] else 0,
+               event["data"]["info"][MEDAL_INFO_IDX][MEDAL_ROOMID_IDX] if len(
+                   event["data"]["info"]) > MEDAL_INFO_IDX else 0,
+               event["data"]["info"][MEDAL_INFO_IDX][MEDAL_LEVEL_IDX] if len(
+                   event["data"]["info"]) > MEDAL_INFO_IDX else 0,
                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                room_id)
         with mydb.cursor() as cursor:
