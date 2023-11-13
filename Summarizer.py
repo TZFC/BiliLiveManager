@@ -4,13 +4,12 @@ from mysql.connector import connect
 import datetime
 
 
-def isDeng(row: dict, field_index: dict, room_id: str) -> bool:
+def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
     text = row[field_index["text"]]
-    roomConfig = load(open(f"Configs/config{room_id}.json"))
     keywords = roomConfig["keyword"]
     required_level = roomConfig["required_level"]
     if (text[:2] in keywords
-        and str(row[field_index["medal_id"]]) == room_id
+        and row[field_index["medal_id"]] == room_id
         and row[field_index["medal_level"]] >= required_level):
         return True
     else:
@@ -27,6 +26,7 @@ def summarize(room_id: int) -> (str, str, datetime.datetime, datetime.datetime):
             field_index = {field_name: index for index, field_name in enumerate(cursor.column_names)}
 
     # 找出路灯关键词
+    roomConfig = load(open(f"Configs/config{room_id}.json"))
     email_rows, jump_rows = list(zip(*[
         (
             # email fields
@@ -41,7 +41,7 @@ def summarize(room_id: int) -> (str, str, datetime.datetime, datetime.datetime):
                 str(row[field_index["time"]] - start_time),  # 相对开播时间
                 row[field_index["text"]][2:]  # 去除指令词的路灯内容
             ])
-        ) for row in raw_danmu if isDeng(row, field_index, room_id)
+        ) for row in raw_danmu if isDeng(row, field_index, room_id, roomConfig)
     ])) or ([], [])
     email_text = "\n".join(email_rows)
     jump_text = "\n".join(jump_rows)
