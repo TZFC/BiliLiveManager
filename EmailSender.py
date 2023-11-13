@@ -3,13 +3,15 @@ import aiosmtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from json import load
-async def send_mail_async(sender:str, to:list[str], subject:str, text:str, textType='plain'):
+async def send_mail_async(sender:str, to:list[str], subject:str, text:str, image = None, textType='plain'):
     msg = MIMEMultipart()
     msg.preamble = subject
     msg['Subject'] = subject
     msg['From'] = sender
     msg['To'] = ', '.join(to)
     msg.attach(MIMEText(text, textType, 'utf-8'))
+    if image:
+        msg.attach(MIMEText(f"<html><body><h1>{text}</h1><img src='{image}'></body></html>", "html", "utf-8"))
     host = "smtp.gmail.com"
     port = 587
     smtp = aiosmtplib.SMTP(hostname=host, port=port, use_tls=False)
