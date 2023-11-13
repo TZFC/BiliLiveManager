@@ -30,7 +30,7 @@ liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room i
 mydb = connect(**load(open("Configs/mysql.json")))
 
 for liveDanmaku in liveDanmakus.values():
-    # FIXME : liveDanmaku.room_display_id is NOT reliable! Use event['room_display_id'] instead.
+    # FIXME : Multi[le LIVE triggered, why?
     @liveDanmaku.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
@@ -43,13 +43,17 @@ for liveDanmaku in liveDanmakus.values():
                 return
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        try:
+            medal_room = event["data"]["info"][MEDAL_INFO_IDX][MEDAL_ROOMID_IDX]
+            medal_level = event["data"]["info"][MEDAL_INFO_IDX][MEDAL_LEVEL_IDX]
+        except:
+            medal_room = 0
+            medal_level = 0
         val = (event["data"]["info"][SENDER_INFO_IDX][SENDER_USERNAME_IDX],
                received_uid,
                text,
-               event["data"]["info"][MEDAL_INFO_IDX][MEDAL_ROOMID_IDX] if len(
-                   event["data"]["info"]) > MEDAL_INFO_IDX else 0,
-               event["data"]["info"][MEDAL_INFO_IDX][MEDAL_LEVEL_IDX] if len(
-                   event["data"]["info"]) > MEDAL_INFO_IDX else 0,
+               medal_room,
+               medal_level,
                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                room_id)
         with mydb.cursor() as cursor:
@@ -60,14 +64,14 @@ for liveDanmaku in liveDanmakus.values():
     @liveDanmaku.on("LIVE")
     async def liveStart(event):
         room_id = event['room_display_id']
-        # sql = "SELECT * FROM liveTime WHERE room_id = %s AND end IS NULL"
-        # val = (room_id,)
-        # with mydb.cursor() as cursor:
-        #     cursor.execute(sql, val)
-        #     res = cursor.fetchall()
-        # if res:
-        #     # Dupilicated LIVE event, why?
-        #     return
+        sql = "SELECT * FROM liveTime WHERE room_id = %s AND end IS NULL"
+        val = (room_id,)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+            res = cursor.fetchall()
+        if res:
+            # Dupilicated LIVE event, why?
+            return
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
             info = await liveRooms[room_id].get_room_info()
@@ -91,6 +95,23 @@ for liveDanmaku in liveDanmakus.values():
     @liveDanmaku.on("PREPARING")
     async def liveEnd(event):
         room_id = event['room_display_id']
+        # FIXME: duplicate LIVE events?
+        # 删除重复开播记录
+        with mydb.cursor() as cur:
+            sql = "SELECT * FROM liveTime WHERE room_id = %s"
+            val = (room_id,)
+            cur.execute(sql, val)
+            result = cur.fetchall()
+            start = result[0][1]
+            sql = "DELETE FROM liveTime WHERE room_id = %s AND end IS NULL"
+            val = (room_id,)
+            cur.execute(sql, val)
+            mydb.commit()
+            sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
+            val = (room_id, start)
+            cur.execute(sql, val)
+            mydb.commit()
+
         # 记录下播时间
         sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
         val = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
