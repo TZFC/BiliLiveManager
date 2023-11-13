@@ -80,7 +80,7 @@ def bind(room: LiveDanmaku):
             image = info['room_info']['cover']
             tg.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                            subject=f"{roomConfigs[room_id]['nickname']}开始直播{title}",
-                                           text=f"{info}", image = None))
+                                           text=f"{title}", image = None))
 
             # 发送打招呼弹幕
             tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
