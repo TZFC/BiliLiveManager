@@ -2,7 +2,7 @@
 "room_id":"{room_id}",
 "nickname":"昵称",
 "listener_email":["listener1@qq.com", "listener2@gmail.com"],
-"keyword":["--","=="], // 限两个字符 2 characters
+"keyword":["--","=="],
 "required_level": 10,
 "repo":[],
 "master":"tzfc",
