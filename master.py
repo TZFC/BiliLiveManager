@@ -103,15 +103,16 @@ def bind(room: LiveDanmaku):
             val = (room_id,)
             cur.execute(sql, val)
             result = cur.fetchall()
-            start = result[0][1]
-            sql = "DELETE FROM liveTime WHERE room_id = %s AND summary IS NULL"
-            val = (room_id,)
-            cur.execute(sql, val)
-            mydb.commit()
-            sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
-            val = (room_id, start)
-            cur.execute(sql, val)
-            mydb.commit()
+            if result:
+                start = result[0][1]
+                sql = "DELETE FROM liveTime WHERE room_id = %s AND summary IS NULL"
+                val = (room_id,)
+                cur.execute(sql, val)
+                mydb.commit()
+                sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
+                val = (room_id, start)
+                cur.execute(sql, val)
+                mydb.commit()
 
         # 记录下播时间
         sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
