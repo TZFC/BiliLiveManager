@@ -31,7 +31,6 @@ mydb = connect(**load(open("Configs/mysql.json")))
 
 def bind(room: LiveDanmaku):
     __room = room
-    # FIXME : Multi[le LIVE triggered, why?
     @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
@@ -78,9 +77,10 @@ def bind(room: LiveDanmaku):
             info = await liveRooms[room_id].get_room_info()
             title = info['room_info']['title']
             image = info['room_info']['cover']
+            area = info['room_info']['area_name']
             tg.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                            subject=f"{roomConfigs[room_id]['nickname']}开始直播{title}",
-                                           text=f"{info}", image = image))
+                                           text=f"{area}", image = image))
 
             # 发送打招呼弹幕
             tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
@@ -96,22 +96,6 @@ def bind(room: LiveDanmaku):
     @__room.on("PREPARING")
     async def liveEnd(event):
         room_id = event['room_display_id']
-        # FIXME: duplicate LIVE events?
-        # 删除重复开播记录
-        with mydb.cursor() as cur:
-            sql = "SELECT * FROM liveTime WHERE room_id = %s"
-            val = (room_id,)
-            cur.execute(sql, val)
-            result = cur.fetchall()
-            start = result[0][1]
-            sql = "DELETE FROM liveTime WHERE room_id = %s AND end IS NULL"
-            val = (room_id,)
-            cur.execute(sql, val)
-            mydb.commit()
-            sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
-            val = (room_id, start)
-            cur.execute(sql, val)
-            mydb.commit()
 
         # 记录下播时间
         sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"

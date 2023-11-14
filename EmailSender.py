@@ -5,7 +5,6 @@ from email.mime.text import MIMEText
 from json import load
 async def send_mail_async(sender:str, to:list[str], subject:str, text:str, image = None, textType='plain'):
     msg = MIMEMultipart()
-    msg.preamble = subject
     msg['Subject'] = subject
     msg['From'] = sender
     msg['To'] = ', '.join(to)
