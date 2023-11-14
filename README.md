@@ -91,4 +91,10 @@ python master.py &
 ```
 
 ## 9. (optional) Run refreshCredentials.py
-You may want to set a cron job to run it daily at midnight
+You may want to set a cron job to run it daily at noon
+```
+crontab -e
+```
+```
+0 12 * * * python refreshCredentials.py
+```
