@@ -5,9 +5,9 @@ from bilibili_api.live import LiveDanmaku, LiveRoom
 from json import load
 from mysql.connector import connect
 from datetime import datetime
-from Utils.CredentialGetter import getCredential
-from Utils.EmailSender import send_mail_async
-from Utils.Summarizer import summarize
+from CredentialGetter import getCredential
+from EmailSender import send_mail_async
+from Summarizer import summarize
 
 BANNED = {"看", "动", "太", "泰", "态", "有"}
 TEXT_IDX = 1
@@ -80,7 +80,7 @@ def bind(room: LiveDanmaku):
             area = info['room_info']['area_name']
             tg.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                            subject=f"{roomConfigs[room_id]['nickname']}开始直播{title}",
-                                           text=f"{area}", image = image))
+                                           text=f"{event}", mimeText = area, image = image))
 
             # 发送打招呼弹幕
             tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
@@ -119,7 +119,7 @@ def bind(room: LiveDanmaku):
 
         if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
             # 记录路灯跳转
-            sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND summary IS NULL"
+            sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
             if jump_text:
                 val = (jump_text, room_id)
             else:

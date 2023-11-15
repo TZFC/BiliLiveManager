@@ -16,9 +16,9 @@ def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
         return False
 
 def summarize(room_id: int) -> (str, str, datetime.datetime, datetime.datetime):
-    with connect(**load(open("../Configs/mysql.json"))) as mydb:
+    with connect(**load(open("Configs/mysql.json"))) as mydb:
         with mydb.cursor() as cursor:
-            cursor.execute("SELECT start, end FROM liveTime WHERE room_id = %s AND summary IS NULL", (room_id,))
+            cursor.execute("SELECT start, end FROM liveTime WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL", (room_id,))
             start_time, end_time = cursor.fetchall()[0] # TODO: change back to fetchone and throw exception when more than one
             cursor.execute("SELECT * FROM danmu WHERE room_id = %s AND time BETWEEN %s AND %s",
                            (room_id, start_time, end_time))
@@ -26,7 +26,7 @@ def summarize(room_id: int) -> (str, str, datetime.datetime, datetime.datetime):
             field_index = {field_name: index for index, field_name in enumerate(cursor.column_names)}
 
     # 找出路灯关键词
-    roomConfig = load(open(f"../Configs/config{room_id}.json"))
+    roomConfig = load(open(f"Configs/config{room_id}.json"))
     email_rows, jump_rows = list(zip(*[
         (
             # email fields
