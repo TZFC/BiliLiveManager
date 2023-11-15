@@ -1,5 +1,10 @@
 {
-"username":"example@gmail.com",
-"password":"PASSWORD",
-"room_ids":["23596840", "870004", "23808442", "5561470"]
+  "username": "example@gmail.com",
+  "password": "PASSWORD",
+  "room_ids": [
+    "23596840",
+    "870004",
+    "23808442",
+    "5561470"
+  ]
 }

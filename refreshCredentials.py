@@ -2,8 +2,10 @@ import json
 
 from bilibili_api import sync
 from mysql.connector import connect
+
 from CredentialGetter import getCredential
-#from Utils.EmailSender import sendEmail
+
+# from Utils.EmailSender import sendEmail
 
 # Hard coding 'tzfc' for now. Will iterate through user list when needed
 credential = getCredential("tzfc")

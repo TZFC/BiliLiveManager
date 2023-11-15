@@ -1,7 +1,7 @@
+from datetime import datetime
 from json import load
 
 from mysql.connector import connect
-import datetime
 
 
 def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
@@ -9,17 +9,20 @@ def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
     keywords = roomConfig["keyword"]
     required_level = roomConfig["required_level"]
     if (text[:2] in keywords
-        and str(row[field_index["medal_id"]]) == str(room_id)
-        and row[field_index["medal_level"]] >= required_level):
+            and str(row[field_index["medal_id"]]) == str(room_id)
+            and row[field_index["medal_level"]] >= required_level):
         return True
     else:
         return False
 
-def summarize(room_id: int) -> (str, str, datetime.datetime, datetime.datetime):
+
+def summarize(room_id: int) -> (str, str, datetime, datetime):
     with connect(**load(open("Configs/mysql.json"))) as mydb:
         with mydb.cursor() as cursor:
-            cursor.execute("SELECT start, end FROM liveTime WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL", (room_id,))
-            start_time, end_time = cursor.fetchall()[0] # TODO: change back to fetchone and throw exception when more than one
+            cursor.execute("SELECT start, end FROM liveTime WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL",
+                           (room_id,))
+            start_time, end_time = cursor.fetchall()[
+                0]  # TODO: change back to fetchone and throw exception when more than one
             cursor.execute("SELECT * FROM danmu WHERE room_id = %s AND time BETWEEN %s AND %s",
                            (room_id, start_time, end_time))
             raw_danmu = cursor.fetchall()

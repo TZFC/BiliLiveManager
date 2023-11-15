@@ -1,11 +1,10 @@
-from json import load
 import time
+from json import load
 
 from bilibili_api import sync, Danmaku
 from bilibili_api.live import LiveDanmaku, LiveRoom
 
 from CredentialGetter import getCredential
-
 
 masterConfig = load(open(f"Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]

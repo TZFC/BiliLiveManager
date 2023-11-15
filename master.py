@@ -1,10 +1,11 @@
 import asyncio
+from datetime import datetime
+from json import load
 
 from bilibili_api import Danmaku, sync
 from bilibili_api.live import LiveDanmaku, LiveRoom
-from json import load
 from mysql.connector import connect
-from datetime import datetime
+
 from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
@@ -29,8 +30,10 @@ liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for 
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
 
+
 def bind(room: LiveDanmaku):
     __room = room
+
     @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
@@ -60,7 +63,6 @@ def bind(room: LiveDanmaku):
             cursor.execute(sql, val)
         mydb.commit()
 
-
     @__room.on("LIVE")
     async def liveStart(event):
         room_id = event['room_display_id']
@@ -80,7 +82,7 @@ def bind(room: LiveDanmaku):
             area = info['room_info']['area_name']
             tg.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                            subject=f"{roomConfigs[room_id]['nickname']}开始直播{title}",
-                                           text=f"{event}", mimeText = area, image = image))
+                                           text=f"{event}", mimeText=area, image=image))
 
             # 发送打招呼弹幕
             tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
@@ -91,7 +93,6 @@ def bind(room: LiveDanmaku):
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
-
 
     @__room.on("PREPARING")
     async def liveEnd(event):
@@ -141,6 +142,7 @@ def bind(room: LiveDanmaku):
         with mydb.cursor() as cursor:
             cursor.execute(sql, val)
         mydb.commit()
+
 
 for room in liveDanmakus.values():
     bind(room)

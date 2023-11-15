@@ -1,9 +1,12 @@
-import aiosmtplib
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from json import load
-async def send_mail_async(sender:str, to:list[str], subject:str, text:str, mimeText: str, image = None, textType='plain'):
+
+import aiosmtplib
+
+
+async def send_mail_async(sender: str, to: list[str], subject: str, text: str, mimeText: str, image=None,
+                          textType='plain'):
     msg = MIMEMultipart()
     msg['Subject'] = subject
     msg['From'] = sender
