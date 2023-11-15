@@ -116,7 +116,7 @@ python master.py &
 set a cron job to run it hourly at 55th minute
 
 ```
-55 * * * * python poppularTicketRemind.py
+55 * * * * python ~/BiliLiveManager/popularTicketRemind.py
 ```
 
 ## 10. (optional) Run refreshCredentials.py
@@ -124,5 +124,5 @@ set a cron job to run it hourly at 55th minute
 You may want to set a cron job to run it daily at noon
 
 ```
-0 12 * * * python refreshCredentials.py
+0 12 * * * python ~/BiliLiveManager/refreshCredentials.py
 ```
