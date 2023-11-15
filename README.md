@@ -111,7 +111,7 @@ Note: Feature flag 0 is OFF ; 1 is ON
 python master.py &
 ```
 
-## 10. Run refreshCredentials.py
+## 9. Run refreshCredentials.py
 
 set a cron job to run it hourly at 55th minute
 
