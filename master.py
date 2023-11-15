@@ -1,13 +1,13 @@
 import asyncio
 
-from bilibili_api import Credential, Danmaku, sync
+from bilibili_api import Danmaku, sync
 from bilibili_api.live import LiveDanmaku, LiveRoom
 from json import load
 from mysql.connector import connect
 from datetime import datetime
-from CredentialGetter import getCredential
-from EmailSender import send_mail_async
-from Summarizer import summarize
+from Utils.CredentialGetter import getCredential
+from Utils.EmailSender import send_mail_async
+from Utils.Summarizer import summarize
 
 BANNED = {"看", "动", "太", "泰", "态", "有"}
 TEXT_IDX = 1
