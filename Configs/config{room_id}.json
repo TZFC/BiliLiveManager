@@ -9,6 +9,8 @@
     "--",
     "=="
   ],
+  "ban_words": [],
+  “ban_timeout”: 60,
   "required_level": 10,
   "repo": [],
   "master": "tzfc",
