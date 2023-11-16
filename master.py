@@ -112,11 +112,11 @@ def bind(room: LiveDanmaku):
         if email_text:
             await send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                   subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                  text=email_text)
+                                  text=email_text, mimeText="")
         else:
             await send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                   subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                  text="本期无路灯")
+                                  text="本期无路灯", mimeText="")
 
         if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
             # 记录路灯跳转
