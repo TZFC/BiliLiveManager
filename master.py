@@ -34,6 +34,37 @@ mydb = connect(**load(open("Configs/mysql.json")))
 def bind(room: LiveDanmaku):
     __room = room
 
+    @__room.on("SEND_GIFT")
+    async def gift(event):
+        room_id = event['room_display_id']
+        # 解封用户
+        if not roomConfigs[room_id]["feature_flags"]["unban"]:
+            return
+        sender_uid = event["data"]["data"]["uid"]
+        sql = "SELECT ban_id FROM banned WHERE uid=%s AND room_id = %s"
+        val = (sender_uid, room_id)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+            result = cursor.fetchall()
+        if result: # if banned by me
+            await liveRooms[room_id].unban(result[0])
+            return
+        black_page = await liveRooms[room_id].get_black_list(page=1)
+        for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
+            if tuid == sender_uid:
+                ban_id = id
+                await liveRooms[room_id].unban(ban_id)
+                return
+        for page_num in range(black_page["total_page"]):
+            black_page = await liveRooms[room_id].get_black_list(page=page_num)
+            for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
+            if tuid == sender_uid:
+                ban_id = id
+                await liveRooms[room_id].unban(ban_id)
+                return
+        # should not end up here!
+        return
+    
     @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
