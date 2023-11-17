@@ -17,6 +17,7 @@
   "feature_flags": {
     "replay_comment": 0,
     "renqi_remind": 0,
-    "ban": 0
+    "ban": 0,
+    "unban": 1
   }
 }
