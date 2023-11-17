@@ -48,6 +48,11 @@ def bind(room: LiveDanmaku):
             result = cursor.fetchall()
         if result: # if banned by me
             await liveRooms[room_id].unban(result[0])
+            sql = "DELETE FROM banned WHERE uid=%s AND room_id = %s"
+            val = (sender_uid, room_id)
+            with mydb.cursor() as cursor:
+                cursor.execute(sql, val)
+            mydb.commit()
             return
         black_page = await liveRooms[room_id].get_black_list(page=1)
         for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
