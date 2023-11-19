@@ -1,4 +1,5 @@
 import time
+import os
 from json import load
 
 from bilibili_api import sync, Danmaku
@@ -6,9 +7,10 @@ from bilibili_api.live import LiveDanmaku, LiveRoom
 
 from CredentialGetter import getCredential
 
-masterConfig = load(open(f"Configs/masterConfig.json"))
+path = os.getcwd()
+masterConfig = load(open(os.path.join(path,"Configs/masterConfig.json")))
 ROOM_IDS = masterConfig["room_ids"]
-roomConfigs = {room: load(open(f"Configs/config{room}.json")) for room in ROOM_IDS}
+roomConfigs = {room: load(open(os.path.join(path,f"Configs/config{room}.json"))) for room in ROOM_IDS}
 masterCredentials = {room: getCredential(roomConfigs[room]["master"]) for room in ROOM_IDS}
 liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}

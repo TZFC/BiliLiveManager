@@ -21,6 +21,7 @@ MEDAL_NAME_IDX = 1
 MEDAL_USERNAME_IDX = 2
 MEDAL_ROOMID_IDX = 3
 MEDAL_STREAMERUID_IDX = -1
+MSG_TYPE_IDX = 12 # event["data"]["info"][0][MSG_TYPE_IDX] text:0 ; emoticon:1
 
 masterConfig = load(open(f"Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
@@ -34,16 +35,62 @@ mydb = connect(**load(open("Configs/mysql.json")))
 def bind(room: LiveDanmaku):
     __room = room
 
+    @__room.on("SEND_GIFT")
+    async def gift(event):
+        room_id = event['room_display_id']
+        # 解封用户
+        if not roomConfigs[room_id]["feature_flags"]["unban"]:
+            return
+        sender_uid = event["data"]["data"]["uid"]
+        sql = "SELECT ban_id FROM banned WHERE uid=%s AND room_id = %s"
+        val = (sender_uid, room_id)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+            result = cursor.fetchall()
+        if result: # if banned by me
+            await liveRooms[room_id].unban(result[0])
+            sql = "DELETE FROM banned WHERE uid=%s AND room_id = %s"
+            val = (sender_uid, room_id)
+            with mydb.cursor() as cursor:
+                cursor.execute(sql, val)
+            mydb.commit()
+            return
+        black_page = await liveRooms[room_id].get_black_list()
+        for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
+            if tuid == sender_uid:
+                ban_id = id
+                await liveRooms[room_id].unban(ban_id)
+                return
+        # TODO: Pending next bilibili-api release to iterate through pages
+        # for page_num in range(black_page["total_page"]):
+        #     black_page = await liveRooms[room_id].get_black_list(page=page_num)
+        #     for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
+        #         if tuid == sender_uid:
+        #             ban_id = id
+        #             await liveRooms[room_id].unban(ban_id)
+        #             return
+
+        # should not end up here!
+        return
+    
     @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
         received_uid = event["data"]["info"][SENDER_INFO_IDX][SENDER_UID_IDX]
         text = event["data"]["info"][TEXT_IDX]
+
         # 封禁片哥
         if roomConfigs[room_id]["feature_flags"]["ban"]:
             if text in BANNED:
-                await liveRooms[room_id].ban_user(uid=received_uid)
+                asyncio.create_task(liveRooms[room_id].ban_user(uid=received_uid))
                 return
+        # 封禁关键词
+        if roomConfigs[room_id]["feature_flags"]["unban"]:
+            if event["data"]["info"][0][MSG_TYPE_IDX] == 0: # only effective on text MSG
+                for banned_word in roomConfigs[room_id]["ban_words"]:
+                    if banned_word in text:
+                        asyncio.create_task(liveRooms[room_id].ban_user(uid=received_uid))
+
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         try:
@@ -65,6 +112,9 @@ def bind(room: LiveDanmaku):
 
     @__room.on("LIVE")
     async def liveStart(event):
+        if "live_time" not in event.keys():
+            # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
+            return
         room_id = event['room_display_id']
         sql = "SELECT * FROM liveTime WHERE room_id = %s AND end IS NULL"
         val = (room_id,)
@@ -110,13 +160,13 @@ def bind(room: LiveDanmaku):
 
         # 寄出邮件
         if email_text:
-            await send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+            asyncio.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                   subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                  text=email_text, mimeText="")
+                                  text=email_text, mimeText=""))
         else:
-            await send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+            asyncio.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                   subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                  text="本期无路灯", mimeText="")
+                                  text="本期无路灯", mimeText=""))
 
         if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
             # 记录路灯跳转
