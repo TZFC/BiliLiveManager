@@ -42,19 +42,7 @@ def bind(room: LiveDanmaku):
         if not roomConfigs[room_id]["feature_flags"]["unban"]:
             return
         sender_uid = event["data"]["data"]["uid"]
-        sql = "SELECT ban_id FROM banned WHERE uid=%s AND room_id = %s"
-        val = (sender_uid, room_id)
-        with mydb.cursor() as cursor:
-            cursor.execute(sql, val)
-            result = cursor.fetchall()
-        if result: # if banned by me
-            await liveRooms[room_id].unban(result[0])
-            sql = "DELETE FROM banned WHERE uid=%s AND room_id = %s"
-            val = (sender_uid, room_id)
-            with mydb.cursor() as cursor:
-                cursor.execute(sql, val)
-            mydb.commit()
-            return
+
         black_page = await liveRooms[room_id].get_black_list()
         for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
             if tuid == sender_uid:
