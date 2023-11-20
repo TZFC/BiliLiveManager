@@ -182,13 +182,13 @@ def bind(room: LiveDanmaku):
         with mydb.cursor() as cursor:
             cursor.execute(sql, val)
         mydb.commit()
-        
+
         # 重载直播间设置, 重新连接直播间
         roomConfigs[room_id] = load(open(f"Configs/config{room_id}.json"))
         masterCredentials[room_id] = getCredential(roomConfigs[room_id]["master"])
-        liveDanmakus[room_id].disconnect()
+        await liveDanmakus[room_id].disconnect()
         liveDanmakus[room_id] = LiveDanmaku(room_id, credential=masterCredentials[room_id])
-        liveDanmakus[room_id].connect()
+        await liveDanmakus[room_id].connect()
         liveRooms[room_id] = LiveRoom(room_id, credential=masterCredentials[room_id])
 
 
