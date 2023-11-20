@@ -104,14 +104,6 @@ def bind(room: LiveDanmaku):
             # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
             return
         room_id = event['room_display_id']
-        sql = "SELECT * FROM liveTime WHERE room_id = %s AND end IS NULL"
-        val = (room_id,)
-        # with mydb.cursor() as cursor:
-        #     cursor.execute(sql, val)
-        #     res = cursor.fetchall()
-        # if res:
-        #     # Dupilicated LIVE event, why?
-        #     return
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
             info = await liveRooms[room_id].get_room_info()
