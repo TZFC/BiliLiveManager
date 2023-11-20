@@ -21,9 +21,9 @@ MEDAL_NAME_IDX = 1
 MEDAL_USERNAME_IDX = 2
 MEDAL_ROOMID_IDX = 3
 MEDAL_STREAMERUID_IDX = -1
-MSG_TYPE_IDX = 12 # event["data"]["info"][0][MSG_TYPE_IDX] text:0 ; emoticon:1
+MSG_TYPE_IDX = 12  # event["data"]["info"][0][MSG_TYPE_IDX] text:0 ; emoticon:1
 
-masterConfig = load(open(f"Configs/masterConfig.json"))
+masterConfig = load(open("Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
 roomConfigs = {room: load(open(f"Configs/config{room}.json")) for room in ROOM_IDS}
 masterCredentials = {room: getCredential(roomConfigs[room]["master"]) for room in ROOM_IDS}
@@ -60,7 +60,7 @@ def bind(room: LiveDanmaku):
 
         # should not end up here!
         return
-    
+
     @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
@@ -74,7 +74,7 @@ def bind(room: LiveDanmaku):
                 return
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
-            if event["data"]["info"][0][MSG_TYPE_IDX] == 0: # only effective on text MSG
+            if event["data"]["info"][0][MSG_TYPE_IDX] == 0:  # only effective on text MSG
                 for banned_word in roomConfigs[room_id]["ban_words"]:
                     if banned_word in text:
                         asyncio.create_task(liveRooms[room_id].ban_user(uid=received_uid))
@@ -148,13 +148,15 @@ def bind(room: LiveDanmaku):
 
         # 寄出邮件
         if email_text:
-            asyncio.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
-                                  subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                  text=email_text, mimeText=""))
+            asyncio.create_task(
+                send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                                subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
+                                text=email_text, mimeText=""))
         else:
-            asyncio.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
-                                  subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                  text="本期无路灯", mimeText=""))
+            asyncio.create_task(
+                send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                                subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
+                                text="本期无路灯", mimeText=""))
 
         if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
             # 记录路灯跳转
@@ -180,6 +182,14 @@ def bind(room: LiveDanmaku):
         with mydb.cursor() as cursor:
             cursor.execute(sql, val)
         mydb.commit()
+        
+        # 重载直播间设置, 重新连接直播间
+        roomConfigs[room_id] = load(open(f"Configs/config{room_id}.json"))
+        masterCredentials[room_id] = getCredential(roomConfigs[room_id]["master"])
+        liveDanmakus[room_id].disconnect()
+        liveDanmakus[room_id] = LiveDanmaku(room_id, credential=masterCredentials[room_id])
+        liveDanmakus[room_id].connect()
+        liveRooms[room_id] = LiveRoom(room_id, credential=masterCredentials[room_id])
 
 
 for room in liveDanmakus.values():
