@@ -16,7 +16,7 @@ for master in masterConfig["masters"]:
     credential = getCredential(master)
     if sync(credential.check_refresh()):
         sync(credential.refresh())
-        sql = "UPDATE credentials SET sessdata = %s, bili_jct = %s, buvid3 = %s, ac_time_value = %s WHERE user = %s"
+        sql = "UPDATE credentials SET sessdata = %s, bili_jct = %s, buvid3 = %s, ac_time_value = %s WHERE master = %s"
         val = (credential.sessdata, credential.bili_jct, credential.buvid3, credential.ac_time_value. master)
         with connect(**load(open(os.path.join(path, "mysql.json")))) as mydb:
             with mydb.cursor() as cursor:
