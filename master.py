@@ -49,7 +49,7 @@ def bind(room: LiveDanmaku):
         if not roomConfigs[room_id]["feature_flags"]["unban"]:
             return
         sender_uid = event["data"]["data"]["uid"]
-        # TODO: Pending next bilibili-api release to fix unban
+
         black_page = await liveRooms[room_id].get_black_list()
         for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
             if tuid == sender_uid:
@@ -195,4 +195,4 @@ for room in liveDanmakus.values():
     bind(room)
 
 if __name__ == "__main__":
-    sync(asyncio.gather(*[asyncio.create_task(room.connect()) for room in liveDanmakus.values()]))
+    sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()]))
