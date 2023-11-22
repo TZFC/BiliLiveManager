@@ -10,7 +10,7 @@ from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
 
-BANNED = {"看", "动", "太", "泰", "态", "有"}
+BANNED = {"看", "动", "泰", "态", "有"}
 TEXT_IDX = 1
 SENDER_INFO_IDX = 2
 MEDAL_INFO_IDX = 3
