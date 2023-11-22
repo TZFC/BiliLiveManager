@@ -31,6 +31,13 @@ liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for 
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
 
+async def reconnect(room_id):
+    roomConfigs[room_id] = load(open(f"Configs/config{room_id}.json"))
+    masterCredentials[room_id] = getCredential(roomConfigs[room_id]["master"])
+    await liveDanmakus[room_id].disconnect()
+    liveDanmakus[room_id] = LiveDanmaku(room_id, credential=masterCredentials[room_id])
+    await liveDanmakus[room_id].connect()
+    liveRooms[room_id] = LiveRoom(room_id, credential=masterCredentials[room_id])
 
 def bind(room: LiveDanmaku):
     __room = room
@@ -126,62 +133,62 @@ def bind(room: LiveDanmaku):
 
     @__room.on("PREPARING")
     async def liveEnd(event):
-        room_id = event['room_display_id']
+        async with asyncio.TaskGroup() as tg:
+            room_id = event['room_display_id']
 
-        # 记录下播时间
-        sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
-        val = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
-        with mydb.cursor() as cursor:
-            cursor.execute(sql, val)
-        mydb.commit()
-
-        # 提炼路灯邮件文 及 跳转文
-        email_text, jump_text, start_time, end_time = summarize(room_id)
-
-        # 寄出邮件
-        if email_text:
-            asyncio.create_task(
-                send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
-                                subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                text=email_text, mimeText=""))
-        else:
-            asyncio.create_task(
-                send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
-                                subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                text="本期无路灯", mimeText=""))
-
-        if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
-            # 记录路灯跳转
-            sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
-            if jump_text:
-                val = (jump_text, room_id)
-            else:
-                val = ("N/A", room_id)
+            # 记录下播时间
+            sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
+            val = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
-        else:
-            # 删除直播场次记录
-            sql = "DELETE FROM liveTime WHERE room_id = %s"
+
+            # 提炼路灯邮件文 及 跳转文
+            email_text, jump_text, start_time, end_time = summarize(room_id)
+
+            # 寄出邮件
+            if email_text:
+                tg.create_task(
+                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                                    subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
+                                    text=email_text, mimeText=""))
+            else:
+                tg.create_task(
+                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                                    subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
+                                    text="本期无路灯", mimeText=""))
+
+            if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
+                # 记录路灯跳转
+                sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
+                if jump_text:
+                    val = (jump_text, room_id)
+                else:
+                    val = ("N/A", room_id)
+                with mydb.cursor() as cursor:
+                    cursor.execute(sql, val)
+                mydb.commit()
+            else:
+                # 删除直播场次记录
+                sql = "DELETE FROM liveTime WHERE room_id = %s"
+                val = (room_id,)
+                with mydb.cursor() as cursor:
+                    cursor.execute(sql, val)
+                mydb.commit()
+
+            # 删除弹幕记录
+            sql = "DELETE FROM danmu WHERE room_id = %s"
             val = (room_id,)
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
 
-        # 删除弹幕记录
-        sql = "DELETE FROM danmu WHERE room_id = %s"
-        val = (room_id,)
-        with mydb.cursor() as cursor:
-            cursor.execute(sql, val)
-        mydb.commit()
-
-        # 重载直播间设置, 重新连接直播间
-        roomConfigs[room_id] = load(open(f"Configs/config{room_id}.json"))
-        masterCredentials[room_id] = getCredential(roomConfigs[room_id]["master"])
-        await liveDanmakus[room_id].disconnect()
-        liveDanmakus[room_id] = LiveDanmaku(room_id, credential=masterCredentials[room_id])
-        await liveDanmakus[room_id].connect()
-        liveRooms[room_id] = LiveRoom(room_id, credential=masterCredentials[room_id])
+            # 重载直播间设置, 重新连接所有没在直播的直播间
+            for check_room_id in ROOM_IDS:
+                info = await liveRooms[check_room_id].get_room_info()
+                if info["room_info"]["live_status"] == 1:
+                    continue
+                tg.create_task(reconnect(check_room_id))
 
 
 for room in liveDanmakus.values():
