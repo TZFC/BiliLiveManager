@@ -50,7 +50,7 @@ Fill information into [Configs/mysql.json](https://github.com/TZFC/BiliLiveManag
 Create table credentials
 
 ```
-CREATE TABLE credentials (user VARCHAR, sessdata VARCHAR, bili_jct VARCHAR, buvid3 VARCHAR, ac_time_value VARCHAR)
+CREATE TABLE credentials (master VARCHAR, sessdata VARCHAR, bili_jct VARCHAR, buvid3 VARCHAR, ac_time_value VARCHAR)
 ```
 
 Create table liveTime
