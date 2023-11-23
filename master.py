@@ -197,4 +197,5 @@ for room in liveDanmakus.values():
     bind(room)
 
 if __name__ == "__main__":
-    sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()]))
+    while True:
+        sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()]))
