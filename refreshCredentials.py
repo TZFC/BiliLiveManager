@@ -10,7 +10,6 @@ from CredentialGetter import getCredential
 
 path = os.getcwd()
 
-# Hard coding 'tzfc' for now. Will iterate through user list when needed
 masterConfig = load(open(os.path.join(path, "Configs/masterConfig.json")))
 for master in masterConfig["masters"]:
     credential = getCredential(master)

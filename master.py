@@ -10,7 +10,7 @@ from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
 
-BANNED = {"看", "动", "太", "泰", "态", "有"}
+BANNED = {"看", "动", "泰", "态", "有"}
 TEXT_IDX = 1
 SENDER_INFO_IDX = 2
 MEDAL_INFO_IDX = 3
@@ -30,14 +30,6 @@ masterCredentials = {room: getCredential(roomConfigs[room]["master"]) for room i
 liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
-
-async def reconnect(room_id):
-    roomConfigs[room_id] = load(open(f"Configs/config{room_id}.json"))
-    masterCredentials[room_id] = getCredential(roomConfigs[room_id]["master"])
-    await liveDanmakus[room_id].disconnect()
-    liveDanmakus[room_id] = LiveDanmaku(room_id, credential=masterCredentials[room_id])
-    await liveDanmakus[room_id].connect()
-    liveRooms[room_id] = LiveRoom(room_id, credential=masterCredentials[room_id])
 
 def bind(room: LiveDanmaku):
     __room = room
@@ -145,18 +137,20 @@ def bind(room: LiveDanmaku):
 
             # 提炼路灯邮件文 及 跳转文
             email_text, jump_text, start_time, end_time = summarize(room_id)
+            if not email_text:
+                return
 
             # 寄出邮件
             if email_text:
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text=email_text, mimeText=""))
+                                    text=email_text, mimeText=f"{event}"))
             else:
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text="本期无路灯", mimeText=""))
+                                    text="本期无路灯", mimeText=f"{event}"))
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
@@ -183,13 +177,12 @@ def bind(room: LiveDanmaku):
                 cursor.execute(sql, val)
             mydb.commit()
 
-            # 重载直播间设置, 重新连接所有没在直播的直播间
+            # 重载直播间设置, 刷新Credential
             for check_room_id in ROOM_IDS:
-                info = await liveRooms[check_room_id].get_room_info()
-                if info["room_info"]["live_status"] == 1:
-                    continue
-                tg.create_task(reconnect(check_room_id))
-
+                roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
+                masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
+                liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
+                liveRooms[check_room_id].credential = masterCredentials[check_room_id]
 
 for room in liveDanmakus.values():
     bind(room)
