@@ -145,18 +145,20 @@ def bind(room: LiveDanmaku):
 
             # 提炼路灯邮件文 及 跳转文
             email_text, jump_text, start_time, end_time = summarize(room_id)
+            if not email_text:
+                return
 
             # 寄出邮件
             if email_text:
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text=email_text, mimeText=""))
+                                    text=email_text, mimeText=f"{event}"))
             else:
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text="本期无路灯", mimeText=""))
+                                    text="本期无路灯", mimeText=f"{event}"))
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
