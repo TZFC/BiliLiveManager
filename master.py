@@ -137,7 +137,7 @@ def bind(room: LiveDanmaku):
 
             # 提炼路灯邮件文 及 跳转文
             email_text, jump_text, start_time, end_time = summarize(room_id)
-            if not email_text:
+            if not any([email_text, jump_text, start_time, end_time]):
                 return
 
             # 寄出邮件
