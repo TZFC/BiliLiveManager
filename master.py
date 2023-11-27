@@ -10,7 +10,6 @@ from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
 
-BANNED = {"看", "动", "泰", "态", "有"}
 TEXT_IDX = 1
 SENDER_INFO_IDX = 2
 MEDAL_INFO_IDX = 3
@@ -41,23 +40,7 @@ def bind(room: LiveDanmaku):
         if not roomConfigs[room_id]["feature_flags"]["unban"]:
             return
         sender_uid = event["data"]["data"]["uid"]
-
-        black_page = await liveRooms[room_id].get_black_list()
-        for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
-            if tuid == sender_uid:
-                ban_id = id
-                await liveRooms[room_id].unban(ban_id)
-                return
-        # TODO: Pending next bilibili-api release to iterate through pages
-        # for page_num in range(black_page["total_page"]):
-        #     black_page = await liveRooms[room_id].get_black_list(page=page_num)
-        #     for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
-        #         if tuid == sender_uid:
-        #             ban_id = id
-        #             await liveRooms[room_id].unban(ban_id)
-        #             return
-
-        # should not end up here!
+        asyncio.create_task(liveRooms[room_id].unban_user(uid=sender_uid))
         return
 
     @__room.on("DANMU_MSG")
@@ -66,11 +49,6 @@ def bind(room: LiveDanmaku):
         received_uid = event["data"]["info"][SENDER_INFO_IDX][SENDER_UID_IDX]
         text = event["data"]["info"][TEXT_IDX]
 
-        # 封禁片哥
-        if roomConfigs[room_id]["feature_flags"]["ban"]:
-            if text in BANNED:
-                asyncio.create_task(liveRooms[room_id].ban_user(uid=received_uid))
-                return
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
             if event["data"]["info"][0][MSG_TYPE_IDX] == 0:  # only effective on text MSG
