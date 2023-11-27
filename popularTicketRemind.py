@@ -28,4 +28,5 @@ for room_id in ROOM_IDS:
     if live_start_time + 3600 > time.time():
         continue
     sync(liveRooms[room_id].send_danmaku(Danmaku("点点上方免费人气票！")))
+    sync(liveRooms[room_id].send_popular_ticket())
     time.sleep(5)
