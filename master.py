@@ -33,15 +33,12 @@ mydb = connect(**load(open("Configs/mysql.json")))
 async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
     await liveRoom.ban_user(uid)
     await asyncio.sleep(timeout)
-    try:
-        asyncio.create_task(liveRoom.unban_user(uid))
-        sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
-        val = (uid, liveRoom.room_display_id)
-        with mydb.cursor() as cursor:
-            cursor.execute(sql, val)
-        mydb.commit()
-    except:
-        return
+    asyncio.create_task(liveRoom.unban_user(uid))
+    sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
+    val = (uid, liveRoom.room_display_id)
+    with mydb.cursor() as cursor:
+        cursor.execute(sql, val)
+    mydb.commit()
 
 def bind(room: LiveDanmaku):
     __room = room
