@@ -9,15 +9,14 @@
     "--",
     "=="
   ],
-  "ban_words": [],
-  "ban_timeout": 60,
-  "required_level": 10,
+  "ban_words": ["臭dd","沐沐是大的"],
+  "ban_timeout": [30, 60],
+  "unban_gift": ["辣条", "粉丝团灯牌"],
   "repo": [],
   "master": "tzfc",
   "feature_flags": {
     "replay_comment": 0,
     "renqi_remind": 0,
-    "ban": 0,
     "unban": 1
   }
 }

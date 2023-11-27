@@ -10,7 +10,6 @@ from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
 
-BANNED = {"看", "动", "泰", "态", "有"}
 TEXT_IDX = 1
 SENDER_INFO_IDX = 2
 MEDAL_INFO_IDX = 3
@@ -31,6 +30,18 @@ liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for 
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
 
+
+async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
+    await liveRoom.ban_user(uid)
+    await asyncio.sleep(timeout)
+    asyncio.create_task(liveRoom.unban_user(uid))
+    sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
+    val = (uid, liveRoom.room_display_id)
+    with mydb.cursor() as cursor:
+        cursor.execute(sql, val)
+    mydb.commit()
+
+
 def bind(room: LiveDanmaku):
     __room = room
 
@@ -41,24 +52,24 @@ def bind(room: LiveDanmaku):
         if not roomConfigs[room_id]["feature_flags"]["unban"]:
             return
         sender_uid = event["data"]["data"]["uid"]
-
-        black_page = await liveRooms[room_id].get_black_list()
-        for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
-            if tuid == sender_uid:
-                ban_id = id
-                await liveRooms[room_id].unban(ban_id)
-                return
-        # TODO: Pending next bilibili-api release to iterate through pages
-        # for page_num in range(black_page["total_page"]):
-        #     black_page = await liveRooms[room_id].get_black_list(page=page_num)
-        #     for tuid, tname, uid, name, ctime, id, is_anchor, face, admin_level in black_page["data"]:
-        #         if tuid == sender_uid:
-        #             ban_id = id
-        #             await liveRooms[room_id].unban(ban_id)
-        #             return
-
-        # should not end up here!
-        return
+        sql = "SELECT reason, time FROM banned WHERE uid=%s AND room_id=%s"
+        val = (sender_uid, room_id)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+            result = cursor.fetchall()
+        try:
+            reason, time = result[0]
+        except:
+            return
+        if reason == event['data']['data']['giftName']:
+            asyncio.create_task(liveRooms[room_id].unban_user(uid=sender_uid))
+            sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
+            val = (sender_uid, room_id)
+            with mydb.cursor() as cursor:
+                cursor.execute(sql, val)
+            mydb.commit()
+        else:
+            return
 
     @__room.on("DANMU_MSG")
     async def recv(event):
@@ -66,17 +77,21 @@ def bind(room: LiveDanmaku):
         received_uid = event["data"]["info"][SENDER_INFO_IDX][SENDER_UID_IDX]
         text = event["data"]["info"][TEXT_IDX]
 
-        # 封禁片哥
-        if roomConfigs[room_id]["feature_flags"]["ban"]:
-            if text in BANNED:
-                asyncio.create_task(liveRooms[room_id].ban_user(uid=received_uid))
-                return
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
             if event["data"]["info"][0][MSG_TYPE_IDX] == 0:  # only effective on text MSG
-                for banned_word in roomConfigs[room_id]["ban_words"]:
+                for index in range(len(roomConfigs[room_id]["ban_words"])):
+                    banned_word = roomConfigs[room_id]["ban_words"][index]
                     if banned_word in text:
-                        asyncio.create_task(liveRooms[room_id].ban_user(uid=received_uid))
+                        asyncio.create_task(ban_with_timeout(liveRoom=liveRooms[room_id],
+                                                             uid=received_uid,
+                                                             timeout=roomConfigs[room_id]["ban_timeout"][index]))
+                        sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (%s, %s, %s, %s)"
+                        val = (received_uid, roomConfigs[room_id]["unban_gift"][index],
+                               datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
+                        with mydb.cursor() as cursor:
+                            cursor.execute(sql, val)
+                        mydb.commit()
 
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
@@ -102,6 +117,12 @@ def bind(room: LiveDanmaku):
         if "live_time" not in event["data"].keys():
             # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
             return
+        # 重载直播间设置, 刷新Credential
+        for check_room_id in ROOM_IDS:
+            roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
+            masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
+            liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
+            liveRooms[check_room_id].credential = masterCredentials[check_room_id]
         room_id = event['room_display_id']
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
@@ -137,7 +158,7 @@ def bind(room: LiveDanmaku):
 
             # 提炼路灯邮件文 及 跳转文
             email_text, jump_text, start_time, end_time = summarize(room_id)
-            if not email_text:
+            if not any([email_text, jump_text, start_time, end_time]):
                 return
 
             # 寄出邮件
@@ -177,12 +198,6 @@ def bind(room: LiveDanmaku):
                 cursor.execute(sql, val)
             mydb.commit()
 
-            # 重载直播间设置, 刷新Credential
-            for check_room_id in ROOM_IDS:
-                roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
-                masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
-                liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
-                liveRooms[check_room_id].credential = masterCredentials[check_room_id]
 
 for room in liveDanmakus.values():
     bind(room)
