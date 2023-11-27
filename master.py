@@ -102,6 +102,12 @@ def bind(room: LiveDanmaku):
         if "live_time" not in event["data"].keys():
             # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
             return
+        # 重载直播间设置, 刷新Credential
+        for check_room_id in ROOM_IDS:
+            roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
+            masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
+            liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
+            liveRooms[check_room_id].credential = masterCredentials[check_room_id]
         room_id = event['room_display_id']
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
@@ -176,13 +182,6 @@ def bind(room: LiveDanmaku):
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
-
-            # 重载直播间设置, 刷新Credential
-            for check_room_id in ROOM_IDS:
-                roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
-                masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
-                liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
-                liveRooms[check_room_id].credential = masterCredentials[check_room_id]
 
 for room in liveDanmakus.values():
     bind(room)
