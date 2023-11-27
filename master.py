@@ -84,7 +84,7 @@ def bind(room: LiveDanmaku):
                         asyncio.create_task(ban_with_timeout(liveRoom=liveRooms[room_id],
                                                              uid=received_uid,
                                                              timeout=roomConfigs[room_id]["ban_timeout"][index]))
-                        sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (&s, &s, &s, &s)"
+                        sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (%s, %s, %s, %s)"
                         val = (received_uid, roomConfigs[room_id]["unban_gift"][index], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
                         with mydb.cursor() as cursor:
                             cursor.execute(sql, val)
