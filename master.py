@@ -30,6 +30,7 @@ liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for 
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
 
+
 async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
     await liveRoom.ban_user(uid)
     await asyncio.sleep(timeout)
@@ -39,6 +40,7 @@ async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
     with mydb.cursor() as cursor:
         cursor.execute(sql, val)
     mydb.commit()
+
 
 def bind(room: LiveDanmaku):
     __room = room
@@ -62,7 +64,7 @@ def bind(room: LiveDanmaku):
         if reason == event['data']['data']['giftName']:
             asyncio.create_task(liveRooms[room_id].unban_user(uid=sender_uid))
             sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
-            val = (sender_uid,room_id)
+            val = (sender_uid, room_id)
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
@@ -85,7 +87,8 @@ def bind(room: LiveDanmaku):
                                                              uid=received_uid,
                                                              timeout=roomConfigs[room_id]["ban_timeout"][index]))
                         sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (%s, %s, %s, %s)"
-                        val = (received_uid, roomConfigs[room_id]["unban_gift"][index], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
+                        val = (received_uid, roomConfigs[room_id]["unban_gift"][index],
+                               datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
                         with mydb.cursor() as cursor:
                             cursor.execute(sql, val)
                         mydb.commit()
@@ -194,6 +197,7 @@ def bind(room: LiveDanmaku):
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
+
 
 for room in liveDanmakus.values():
     bind(room)
