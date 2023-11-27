@@ -30,6 +30,14 @@ liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for 
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
 
+async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
+    await liveRoom.ban_user(uid)
+    await asyncio.sleep(timeout)
+    try:
+        await liveRoom.unban_user(uid)
+    except:
+        return
+
 def bind(room: LiveDanmaku):
     __room = room
 
@@ -54,7 +62,7 @@ def bind(room: LiveDanmaku):
             if event["data"]["info"][0][MSG_TYPE_IDX] == 0:  # only effective on text MSG
                 for banned_word in roomConfigs[room_id]["ban_words"]:
                     if banned_word in text:
-                        asyncio.create_task(liveRooms[room_id].ban_user(uid=received_uid))
+                        asyncio.create_task(liveRooms[room_id].ban_with_timeout(liveRoom=liveRooms[room_id], uid=received_uid, timeout=30))
 
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
