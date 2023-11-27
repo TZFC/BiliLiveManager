@@ -7,11 +7,7 @@ from mysql.connector import connect
 def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
     text = row[field_index["text"]]
     keywords = roomConfig["keyword"]
-    required_level = roomConfig["required_level"]
-    if (text[:2] in keywords
-        #and str(row[field_index["medal_id"]]) == str(room_id)
-        #and row[field_index["medal_level"]] >= required_level
-        ):
+    if (text[:2] in keywords):
         return True
     else:
         return False
