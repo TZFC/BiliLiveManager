@@ -34,7 +34,12 @@ async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
     await liveRoom.ban_user(uid)
     await asyncio.sleep(timeout)
     try:
-        await liveRoom.unban_user(uid)
+        asyncio.create_task(liveRoom.unban_user(uid))
+        sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
+        val = (uid, liveRoom.room_display_id)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+        mydb.commit()
     except:
         return
 
@@ -48,8 +53,24 @@ def bind(room: LiveDanmaku):
         if not roomConfigs[room_id]["feature_flags"]["unban"]:
             return
         sender_uid = event["data"]["data"]["uid"]
-        asyncio.create_task(liveRooms[room_id].unban_user(uid=sender_uid))
-        return
+        sql = "SELECT reason, time FROM banned WHERE uid=%s AND room_id=%s"
+        val = (sender_uid, room_id)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+            result = cursor.fetchall()
+        try:
+            reason, time = result[0]
+        except:
+            return
+        if reason == event['data']['data']['giftName']:
+            asyncio.create_task(liveRooms[room_id].unban_user(uid=sender_uid))
+            sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
+            val = (sender_uid,room_id)
+            with mydb.cursor() as cursor:
+                cursor.execute(sql, val)
+            mydb.commit()
+        else:
+            return
 
     @__room.on("DANMU_MSG")
     async def recv(event):
@@ -60,9 +81,17 @@ def bind(room: LiveDanmaku):
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
             if event["data"]["info"][0][MSG_TYPE_IDX] == 0:  # only effective on text MSG
-                for banned_word in roomConfigs[room_id]["ban_words"]:
+                for index in range(len(roomConfigs[room_id]["ban_words"])):
+                    banned_word = roomConfigs[room_id]["ban_words"][index]
                     if banned_word in text:
-                        asyncio.create_task(ban_with_timeout(liveRoom=liveRooms[room_id], uid=received_uid, timeout=30))
+                        asyncio.create_task(ban_with_timeout(liveRoom=liveRooms[room_id],
+                                                             uid=received_uid,
+                                                             timeout=roomConfigs[room_id]["timeout"][index]))
+                        sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (&s, &s, &s, &s)"
+                        val = (received_uid, roomConfigs[room_id]["unban_gift"][index], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
+                        with mydb.cursor() as cursor:
+                            cursor.execute(sql, val)
+                        mydb.commit()
 
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
