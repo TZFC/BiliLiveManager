@@ -8,6 +8,7 @@ from bilibili_api import sync
 from mysql.connector import connect
 
 from bilibili_api.channel_series import ChannelSeries, ChannelSeriesType, ChannelOrder
+from bilibili_api.user import User
 from bilibili_api.comment import send_comment, CommentResourceType
 
 from CredentialGetter import getCredential
@@ -34,21 +35,27 @@ with mydb.cursor() as cursor:
         # get all videos in repo
         repo = roomConfigs[room_id]["repo"]
         split_repo = repo.split("/")
-        uid = split_repo[-3]
-        channel_series_type = ChannelSeriesType.SERIES if "series" in split_repo[-1] else ChannelSeriesType.SEASON
-        series_id = eval(re.search(r"sid=\d*", split_repo[-1]).group()[4:])
-        while True:
-            try:
-                channel = ChannelSeries(uid=uid, type_=channel_series_type, id_=series_id,
-                                        credential=masterCredentials[room_id])
-                break
-            except:
-                time.sleep(1)
-        if channel_series_type == ChannelSeriesType.SERIES:
-            videos = sync(channel.get_videos())
+        if split_repo[-1] == "video":
+            uid = split_repo[-2]
+            repo_owner = User(uid=uid, credential=masterCredentials[room_id])
+            videos = sync(repo_owner.get_videos())
+            details = videos['list']['vlist']
         else:
-            videos = sync(channel.get_videos(ChannelOrder.CHANGE))
-        details = videos['archives']
+            uid = split_repo[-3]
+            channel_series_type = ChannelSeriesType.SERIES if "series" in split_repo[-1] else ChannelSeriesType.SEASON
+            series_id = eval(re.search(r"sid=\d*", split_repo[-1]).group()[4:])
+            while True:
+                try:
+                    channel = ChannelSeries(uid=uid, type_=channel_series_type, id_=series_id,
+                                            credential=masterCredentials[room_id])
+                    break
+                except:
+                    time.sleep(1)
+            if channel_series_type == ChannelSeriesType.SERIES:
+                videos = sync(channel.get_videos())
+            else:
+                videos = sync(channel.get_videos(ChannelOrder.CHANGE))
+            details = videos['archives']
 
         # check if there is new video
         sql = "SELECT aid FROM postProgress WHERE room_id=%s"
@@ -62,21 +69,35 @@ with mydb.cursor() as cursor:
         success = []
         for i in range(len(summaries)):
             title = details[i]["title"]
-            try:
-                year, month, day, hour = re.search(r"(\d+)年(\d+)月(\d+)日(\d+)点", title).groups()
-            except:
-                # TODO: log error here
-                continue
-            video_date = datetime(year=eval(year), month=eval(month), day=eval(day), hour=eval(hour))
+            four_part_date = re.search(r"(\d+)年(\d+)月(\d+)日(\d+)点", title)
+            if four_part_date:
+                year, month, day, hour = four_part_date.groups()
+                video_date = datetime(year=eval(year), month=eval(month), day=eval(day), hour=eval(hour))
+            else:
+                three_part_date = re.search(r"(\d+)-(\d+)-(\d+)", title)
+                if not three_part_date:
+                    #TODO: log error here. Only four and three part dates are allowed
+                    continue
+                year, month, day = four_part_date.groups()
+                hour = None
+                video_date = datetime(year=eval(year), month=eval(month), day=eval(day))
             for start, summary in summaries:
                 if (start, summary) in success:
                     continue
-                if abs(start - video_date) < timedelta(hours=1):
-                    if summary != "N/A":
-                        sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
-                                          credential=masterCredentials[room_id]))
-                    success.append((start, summary))
-                    break
+                if hour is None:
+                    if start.year == video_date.year and start.month == video_date.month and start.day == video_date.day:
+                        if summary != "N/A":
+                            sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
+                                              credential=masterCredentials[room_id]))
+                        success.append((start, summary))
+                        break
+                else:
+                    if abs(start - video_date) < timedelta(hours=1):
+                        if summary != "N/A":
+                            sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
+                                              credential=masterCredentials[room_id]))
+                        success.append((start, summary))
+                        break
 
         # remove success matches from database
         for start, summary in success:
