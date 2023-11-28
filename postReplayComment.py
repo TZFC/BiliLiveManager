@@ -48,7 +48,6 @@ with mydb.cursor() as cursor:
             videos = sync(channel.get_videos())
         else:
             videos = sync(channel.get_videos(ChannelOrder.CHANGE))
-        aids = videos['aids']
         details = videos['archives']
 
         # check if there is new video
@@ -56,7 +55,7 @@ with mydb.cursor() as cursor:
         val = (room_id,)
         cursor.execute(sql, val)
         prev_aid = cursor.fetchall()[0]
-        if prev_aid == aids[0]:
+        if prev_aid == details[0]['aid']:
             continue
 
         # match each available summary with videos
