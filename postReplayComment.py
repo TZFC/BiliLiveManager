@@ -108,6 +108,6 @@ with mydb.cursor() as cursor:
 
         # update postProgress
         sql = "UPDATE postProgress SET aid=%s WHERE room_id=%s"
-        val = (aids[0], room_id)
+        val = (details[0]['aid'], room_id)
         cursor.execute(sql, val)
         mydb.commit()
