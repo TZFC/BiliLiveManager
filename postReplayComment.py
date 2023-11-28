@@ -64,7 +64,7 @@ with mydb.cursor() as cursor:
         for i in range(len(summaries)):
             title = details[i]["title"]
             try:
-                year, month, day, hour = re.findall(r'\d+', title)[-4:]
+                year, month, day, hour = re.search(r"(\d+)年(\d+)月(\d+)日(\d+)点", title).groups()
             except:
                 # TODO: log error here
                 continue
