@@ -52,7 +52,7 @@ with mydb.cursor() as cursor:
         details = videos['archives']
 
         # check if there is new video
-        sql = "SELECT aid WHERE room_id=%s"
+        sql = "SELECT aid FROM postProgress WHERE room_id=%s"
         val = (room_id,)
         cursor.execute(sql, val)
         prev_aid = cursor.fetchall()[0]
