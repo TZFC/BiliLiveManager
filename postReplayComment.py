@@ -46,9 +46,9 @@ with mydb.cursor() as cursor:
             except:
                 time.sleep(1)
         if channel_series_type == ChannelSeriesType.SERIES:
-            videos = sync(channel.get_videos(ChannelOrder.CHANGE))
-        else:
             videos = sync(channel.get_videos())
+        else:
+            videos = sync(channel.get_videos(ChannelOrder.CHANGE))
         aids = videos['aids']
         details = videos['archives']
         print(f"the latest video is {details[0]}")
