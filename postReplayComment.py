@@ -78,7 +78,7 @@ with mydb.cursor() as cursor:
                 if not three_part_date:
                     #TODO: log error here. Only four and three part dates are allowed
                     continue
-                year, month, day = four_part_date.groups()
+                year, month, day = three_part_date.groups()
                 hour = None
                 video_date = datetime(year=eval(year), month=eval(month), day=eval(day))
             for start, summary in summaries:
