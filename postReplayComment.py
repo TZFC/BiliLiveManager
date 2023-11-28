@@ -40,7 +40,7 @@ with mydb.cursor() as cursor:
         series_id = eval(re.search(r"sid=\d*", split_repo[-1]).group()[4:])
         while True:
             try:
-                channel = ChannelSeries(uid=uid, type_=channel_series_type.SEASON, id_=series_id,
+                channel = ChannelSeries(uid=uid, type_=channel_series_type, id_=series_id,
                                         credential=masterCredentials[room_id])
                 break
             except:
