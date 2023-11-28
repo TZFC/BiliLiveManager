@@ -71,7 +71,7 @@ with mydb.cursor() as cursor:
             except:
                 # TODO: log error here
                 continue
-            video_date = datetime(year=year, month=month, day=day, hour=hour)
+            video_date = datetime(year=eval(year), month=eval(month), day=eval(day), hour=eval(hour))
             for start, summary in summaries:
                 if (start, summary) in success:
                     continue
