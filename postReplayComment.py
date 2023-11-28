@@ -30,6 +30,7 @@ with mydb.cursor() as cursor:
         summaries = cursor.fetchall()
         if not summaries:
             continue
+        print(f"room {room_id} has available summary {str(summaries)}")
 
         # get all videos in repo
         repo = roomConfigs[room_id]["repo"]
@@ -50,6 +51,7 @@ with mydb.cursor() as cursor:
             videos = sync(channel.get_videos())
         aids = videos['aids']
         details = videos['archives']
+        print(f"the latest video is {details[0]}")
 
         # check if there is new video
         sql = "SELECT aid FROM postProgress WHERE room_id=%s"
@@ -58,6 +60,7 @@ with mydb.cursor() as cursor:
         prev_aid = cursor.fetchall()[0]
         if prev_aid == aids[0]:
             continue
+        print(f"last checked video {prev_aid}, newest is {aids[0]}")
 
         # match each available summary with videos
         success = []
@@ -73,10 +76,13 @@ with mydb.cursor() as cursor:
                 if (start, summary) in success:
                     continue
                 if abs(start - video_date) < timedelta(hours=1):
-                    sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
-                                      credential=masterCredentials[room_id]))
+                    if summary != "N/A":
+                        sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
+                                          credential=masterCredentials[room_id]))
+                        print(f"summary sent to {details[i]['aid']} with text {summary}")
                     success.append((start, summary))
                     break
+        print(f"all success matched are {str(success)}")
 
         # remove success matches from database
         for start, summary in success:
