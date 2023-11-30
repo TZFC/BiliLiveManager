@@ -3,7 +3,7 @@ from json import load
 
 from mysql.connector import connect
 
-OFFSET = timedelta(seconds=5)
+OFFSET = timedelta(seconds=30)
 
 
 def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
