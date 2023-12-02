@@ -4,6 +4,7 @@ from json import load
 
 from bilibili_api import Danmaku, sync
 from bilibili_api.live import LiveDanmaku, LiveRoom
+from bilibili_api.exceptions import ResponseCodeException
 from mysql.connector import connect
 
 from CredentialGetter import getCredential
@@ -34,7 +35,10 @@ mydb = connect(**load(open("Configs/mysql.json")))
 async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
     await liveRoom.ban_user(uid)
     await asyncio.sleep(timeout)
-    asyncio.create_task(liveRoom.unban_user(uid))
+    try:
+        await liveRoom.unban_user(uid)
+    except ResponseCodeException:
+        return
     sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
     val = (uid, liveRoom.room_display_id)
     with mydb.cursor() as cursor:
