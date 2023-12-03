@@ -33,7 +33,10 @@ mydb = connect(**load(open("Configs/mysql.json")))
 
 
 async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
-    await liveRoom.ban_user(uid)
+    try:
+        await liveRoom.ban_user(uid)
+    except ResponseCodeException:
+        return
     await asyncio.sleep(timeout)
     try:
         await liveRoom.unban_user(uid)
