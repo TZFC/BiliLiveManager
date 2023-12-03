@@ -1,7 +1,7 @@
 import asyncio
 
 
-async def unbanOnGift(sender_uid: int, gift: str,room_id: int, live_room, database):
+async def unban_on_gift(sender_uid: int, gift: str,room_id: int, live_room, database):
     sql = "SELECT reason, time FROM banned WHERE uid=%s AND room_id=%s"
     val = (sender_uid, room_id)
     with database.cursor() as cursor:

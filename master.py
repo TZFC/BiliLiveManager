@@ -9,9 +9,10 @@ from mysql.connector import connect
 from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
+from Utils.BanOnKeyword import ban_on_keyword
 from Utils.BanWithTimeout import ban_with_timeout
 from Utils.EVENT_IDX import Index
-from Utils.UnbanOnGift import unbanOnGift
+from Utils.UnbanOnGift import unban_on_gift
 
 masterConfig = load(open("Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
@@ -34,7 +35,7 @@ def bind(room: LiveDanmaku):
         sender_uid = event["data"]["data"]["uid"]
         gift = event['data']['data']['giftName']
         live_room = liveRooms[room_id]
-        await unbanOnGift(sender_uid=sender_uid, gift=gift, room_id=room_id, live_room=live_room, database=mydb)
+        await unban_on_gift(sender_uid=sender_uid, gift=gift, room_id=room_id, live_room=live_room, database=mydb)
 
     @__room.on("DANMU_MSG")
     async def recv(event):
@@ -44,21 +45,11 @@ def bind(room: LiveDanmaku):
 
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
-            if event["data"]["info"][0][Index.MSG_TYPE_IDX] == 0:  # only effective on text MSG
-                for index in range(len(roomConfigs[room_id]["ban_words"])):
-                    banned_word = roomConfigs[room_id]["ban_words"][index]
-                    if banned_word in text:
-                        asyncio.create_task(ban_with_timeout(liveRoom=liveRooms[room_id],
-                                                             uid=received_uid,
-                                                             timeout=roomConfigs[room_id]["ban_timeout"][index],
-                                                             database=mydb))
-                        sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (%s, %s, %s, %s)"
-                        val = (received_uid, roomConfigs[room_id]["unban_gift"][index],
-                               datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
-                        with mydb.cursor() as cursor:
-                            cursor.execute(sql, val)
-                        mydb.commit()
-
+            message_type = event["data"]["info"][0][Index.MSG_TYPE_IDX]
+            live_room = liveRooms[room_id]
+            room_config = roomConfigs[room_id]
+            await ban_on_keyword(text=text, message_type=message_type, received_uid=received_uid, room_id=room_id,
+                                 live_room=live_room, room_config=room_config, database=mydb)
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         try:
