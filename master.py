@@ -41,13 +41,13 @@ def bind(room: LiveDanmaku):
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
             info = await liveRooms[room_id].get_room_info()
-            title = info['room_info']['title']
-            tg.create_task(send_mail_async(sender=masterConfig["username"],
-                                           to=roomConfigs[room_id]["listener_email"],
-                                           subject=f"{roomConfigs[room_id]['nickname']}开始直播{title}",
-                                           text=f"{event}",
-                                           mimeText=info['room_info']['area_name'],
-                                           image=info['room_info']['cover']))
+            tg.create_task(send_mail_async(
+                sender=masterConfig["username"],
+                to=roomConfigs[room_id]["listener_email"],
+                subject=f"{roomConfigs[room_id]['nickname']}开始直播{info['room_info']['title']}",
+                text=f"{event}",
+                mimeText=info['room_info']['area_name'],
+                image=info['room_info']['cover']))
 
             # 发送打招呼弹幕
             tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
