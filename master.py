@@ -4,12 +4,12 @@ from json import load
 
 from bilibili_api import Danmaku, sync
 from bilibili_api.live import LiveDanmaku, LiveRoom
-from bilibili_api.exceptions import ResponseCodeException
 from mysql.connector import connect
 
 from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
+from Utils.BanWithTimeout import ban_with_timeout
 
 TEXT_IDX = 1
 SENDER_INFO_IDX = 2
@@ -30,23 +30,6 @@ masterCredentials = {room: getCredential(roomConfigs[room]["master"]) for room i
 liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
-
-
-async def ban_with_timeout(liveRoom: LiveRoom, uid: int, timeout: int):
-    try:
-        await liveRoom.ban_user(uid)
-    except ResponseCodeException:
-        return
-    await asyncio.sleep(timeout)
-    try:
-        await liveRoom.unban_user(uid)
-    except ResponseCodeException:
-        return
-    sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
-    val = (uid, liveRoom.room_display_id)
-    with mydb.cursor() as cursor:
-        cursor.execute(sql, val)
-    mydb.commit()
 
 
 def bind(room: LiveDanmaku):
@@ -92,7 +75,8 @@ def bind(room: LiveDanmaku):
                     if banned_word in text:
                         asyncio.create_task(ban_with_timeout(liveRoom=liveRooms[room_id],
                                                              uid=received_uid,
-                                                             timeout=roomConfigs[room_id]["ban_timeout"][index]))
+                                                             timeout=roomConfigs[room_id]["ban_timeout"][index],
+                                                             database=mydb))
                         sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (%s, %s, %s, %s)"
                         val = (received_uid, roomConfigs[room_id]["unban_gift"][index],
                                datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
