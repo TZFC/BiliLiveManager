@@ -102,7 +102,7 @@ def bind(room: LiveDanmaku):
                              database=mydb)
 
     @__room.on("PREPARING")
-    async def liveEnd(event):
+    async def live_end(event):
         async with asyncio.TaskGroup() as tg:
             room_id = event['room_display_id']
 

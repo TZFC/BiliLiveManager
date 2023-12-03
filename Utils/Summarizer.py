@@ -16,7 +16,7 @@ def isDeng(row: dict, field_index: dict, room_id: int, room_config) -> bool:
 
 
 def summarize(room_id: int) -> (str, str, datetime, datetime):
-    with connect(**load(open("../Configs/mysql.json"))) as mydb:
+    with connect(**load(open("Configs/mysql.json"))) as mydb:
         with mydb.cursor() as cursor:
             cursor.execute("SELECT start, end FROM liveTime WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL",
                            (room_id,))

@@ -18,7 +18,7 @@ async def send_mail_async(sender: str, to: list[str], subject: str, text: str, m
     port = 587
     smtp = aiosmtplib.SMTP(hostname=host, port=port, use_tls=False)
     await smtp.connect()
-    login_info = load(open("../Configs/masterConfig.json"))
+    login_info = load(open("Configs/masterConfig.json"))
     await smtp.login(login_info["username"], login_info["password"])
     await smtp.send_message(msg)
     await smtp.quit()
