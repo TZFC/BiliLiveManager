@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Index(Enum):
     TEXT_IDX = 1
     SENDER_INFO_IDX = 2

@@ -1,23 +1,22 @@
+import os
 import re
 import time
-import os
-from json import load
 from datetime import datetime, timedelta
+from json import load
 
 from bilibili_api import sync
+from bilibili_api.channel_series import ChannelSeries, ChannelSeriesType, ChannelOrder
+from bilibili_api.comment import send_comment, CommentResourceType
+from bilibili_api.user import User
 from mysql.connector import connect
 
-from bilibili_api.channel_series import ChannelSeries, ChannelSeriesType, ChannelOrder
-from bilibili_api.user import User
-from bilibili_api.comment import send_comment, CommentResourceType
-
-from CredentialGetter import getCredential
+from Utils.CredentialGetter import get_credential
 
 path = os.getcwd()
 masterConfig = load(open(os.path.join(path, "Configs/masterConfig.json")))
 ROOM_IDS = masterConfig["room_ids"]
 roomConfigs = {room: load(open(os.path.join(path, f"Configs/config{room}.json"))) for room in ROOM_IDS}
-masterCredentials = {room: getCredential(roomConfigs[room]["master"]) for room in ROOM_IDS}
+masterCredentials = {room: get_credential(roomConfigs[room]["master"]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
 
 with mydb.cursor() as cursor:
@@ -76,7 +75,7 @@ with mydb.cursor() as cursor:
             else:
                 three_part_date = re.search(r"(\d+)-(\d+)-(\d+)", title)
                 if not three_part_date:
-                    #TODO: log error here. Only four and three part dates are allowed
+                    # TODO: log error here. Only four and three part dates are allowed
                     continue
                 year, month, day = three_part_date.groups()
                 hour = None

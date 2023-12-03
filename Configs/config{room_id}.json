@@ -1,5 +1,5 @@
 {
-  "room_id": "{room_id}",
+  "room_id": "1234567890",
   "nickname": "昵称",
   "listener_email": [
     "listener1@qq.com",
@@ -9,10 +9,19 @@
     "--",
     "=="
   ],
-  "ban_words": ["臭dd","沐沐是大的"],
-  "ban_timeout": [30, 60],
-  "unban_gift": ["辣条", "粉丝团灯牌"],
-  "repo": [],
+  "ban_words": [
+    "违禁词",
+    "另一个违禁词"
+  ],
+  "ban_timeout": [
+    30,
+    60
+  ],
+  "unban_gift": [
+    "辣条",
+    "粉丝团灯牌"
+  ],
+  "repo": "https://space.bilibili.com/654321/channel/seriesdetail?sid=123456&ctype=0",
   "master": "tzfc",
   "feature_flags": {
     "replay_comment": 0,

@@ -6,17 +6,17 @@ from mysql.connector import connect
 OFFSET = timedelta(seconds=30)
 
 
-def isDeng(row: dict, field_index: dict, room_id: int, roomConfig) -> bool:
+def isDeng(row: dict, field_index: dict, room_id: int, room_config) -> bool:
     text = row[field_index["text"]]
-    keywords = roomConfig["keyword"]
-    if (text[:2] in keywords):
+    keywords = room_config["keyword"]
+    if text[:2] in keywords:
         return True
     else:
         return False
 
 
 def summarize(room_id: int) -> (str, str, datetime, datetime):
-    with connect(**load(open("Configs/mysql.json"))) as mydb:
+    with connect(**load(open("../Configs/mysql.json"))) as mydb:
         with mydb.cursor() as cursor:
             cursor.execute("SELECT start, end FROM liveTime WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL",
                            (room_id,))
@@ -30,7 +30,7 @@ def summarize(room_id: int) -> (str, str, datetime, datetime):
             field_index = {field_name: index for index, field_name in enumerate(cursor.column_names)}
 
     # 找出路灯关键词
-    roomConfig = load(open(f"Configs/config{room_id}.json"))
+    room_config = load(open(f"../Configs/config{room_id}.json"))
     email_rows, jump_rows = list(zip(*[
         (
             # email fields
@@ -45,7 +45,7 @@ def summarize(room_id: int) -> (str, str, datetime, datetime):
                 str(row[field_index["time"]] - start_time - OFFSET),  # 相对开播时间
                 row[field_index["text"]][2:]  # 去除指令词的路灯内容
             ])
-        ) for row in raw_danmu if isDeng(row, field_index, room_id, roomConfig)
+        ) for row in raw_danmu if isDeng(row, field_index, room_id, room_config)
     ])) or ([], [])
     email_text = "\n".join(email_rows)
     jump_text = "\n".join(jump_rows)

@@ -6,18 +6,18 @@ from bilibili_api import Danmaku, sync
 from bilibili_api.live import LiveDanmaku, LiveRoom
 from mysql.connector import connect
 
-from CredentialGetter import getCredential
-from EmailSender import send_mail_async
-from Summarizer import summarize
 from Utils.BanOnKeyword import ban_on_keyword
+from Utils.CredentialGetter import get_credential
 from Utils.EVENT_IDX import Index
+from Utils.EmailSender import send_mail_async
 from Utils.RecordDanmaku import record_danmaku
+from Utils.Summarizer import summarize
 from Utils.UnbanOnGift import unban_on_gift
 
 masterConfig = load(open("Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
 roomConfigs = {room: load(open(f"Configs/config{room}.json")) for room in ROOM_IDS}
-masterCredentials = {room: getCredential(roomConfigs[room]["master"]) for room in ROOM_IDS}
+masterCredentials = {room: get_credential(roomConfigs[room]["master"]) for room in ROOM_IDS}
 liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 mydb = connect(**load(open("Configs/mysql.json")))
@@ -34,7 +34,7 @@ def bind(room: LiveDanmaku):
         # 重载直播间设置, 刷新Credential
         for check_room_id in ROOM_IDS:
             roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
-            masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
+            masterCredentials[check_room_id] = get_credential(roomConfigs[check_room_id]["master"])
             liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
             liveRooms[check_room_id].credential = masterCredentials[check_room_id]
         room_id = event['room_display_id']
@@ -46,7 +46,7 @@ def bind(room: LiveDanmaku):
                 to=roomConfigs[room_id]["listener_email"],
                 subject=f"{roomConfigs[room_id]['nickname']}开始直播{info['room_info']['title']}",
                 text=f"{event}",
-                mimeText=info['room_info']['area_name'],
+                mime_text=info['room_info']['area_name'],
                 image=info['room_info']['cover']))
 
             # 发送打招呼弹幕
@@ -123,12 +123,12 @@ def bind(room: LiveDanmaku):
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text=email_text, mimeText=f"{event}"))
+                                    text=email_text, mime_text=f"{event}"))
             else:
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text="本期无路灯", mimeText=f"{event}"))
+                                    text="本期无路灯", mime_text=f"{event}"))
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
