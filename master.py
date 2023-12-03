@@ -11,6 +11,7 @@ from EmailSender import send_mail_async
 from Summarizer import summarize
 from Utils.BanOnKeyword import ban_on_keyword
 from Utils.EVENT_IDX import Index
+from Utils.RecordDanmaku import record_danmaku
 from Utils.UnbanOnGift import unban_on_gift
 
 masterConfig = load(open("Configs/masterConfig.json"))
@@ -24,6 +25,39 @@ mydb = connect(**load(open("Configs/mysql.json")))
 
 def bind(room: LiveDanmaku):
     __room = room
+
+    @__room.on("LIVE")
+    async def liveStart(event):
+        if "live_time" not in event["data"].keys():
+            # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
+            return
+        # 重载直播间设置, 刷新Credential
+        for check_room_id in ROOM_IDS:
+            roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
+            masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
+            liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
+            liveRooms[check_room_id].credential = masterCredentials[check_room_id]
+        room_id = event['room_display_id']
+        async with asyncio.TaskGroup() as tg:
+            # 发送开播提醒
+            info = await liveRooms[room_id].get_room_info()
+            title = info['room_info']['title']
+            tg.create_task(send_mail_async(sender=masterConfig["username"],
+                                           to=roomConfigs[room_id]["listener_email"],
+                                           subject=f"{roomConfigs[room_id]['nickname']}开始直播{title}",
+                                           text=f"{event}",
+                                           mimeText=info['room_info']['area_name'],
+                                           image=info['room_info']['cover']))
+
+            # 发送打招呼弹幕
+            tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
+
+            # 记录开播时间
+            sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
+            val = (room_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            with mydb.cursor() as cursor:
+                cursor.execute(sql, val)
+            mydb.commit()
 
     @__room.on("SEND_GIFT")
     async def gift(event):
@@ -53,55 +87,19 @@ def bind(room: LiveDanmaku):
                                  room_config=roomConfigs[room_id],
                                  database=mydb)
         # 记录弹幕
-        sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         try:
             medal_room = event["data"]["info"][Index.MEDAL_INFO_IDX][Index.MEDAL_ROOMID_IDX]
             medal_level = event["data"]["info"][Index.MEDAL_INFO_IDX][Index.MEDAL_LEVEL_IDX]
         except:
             medal_room = 0
             medal_level = 0
-        val = (event["data"]["info"][Index.SENDER_INFO_IDX][Index.SENDER_USERNAME_IDX],
-               received_uid,
-               text,
-               medal_room,
-               medal_level,
-               datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-               room_id)
-        with mydb.cursor() as cursor:
-            cursor.execute(sql, val)
-        mydb.commit()
-
-    @__room.on("LIVE")
-    async def liveStart(event):
-        if "live_time" not in event["data"].keys():
-            # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
-            return
-        # 重载直播间设置, 刷新Credential
-        for check_room_id in ROOM_IDS:
-            roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
-            masterCredentials[check_room_id] = getCredential(roomConfigs[check_room_id]["master"])
-            liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
-            liveRooms[check_room_id].credential = masterCredentials[check_room_id]
-        room_id = event['room_display_id']
-        async with asyncio.TaskGroup() as tg:
-            # 发送开播提醒
-            info = await liveRooms[room_id].get_room_info()
-            title = info['room_info']['title']
-            image = info['room_info']['cover']
-            area = info['room_info']['area_name']
-            tg.create_task(send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
-                                           subject=f"{roomConfigs[room_id]['nickname']}开始直播{title}",
-                                           text=f"{event}", mimeText=area, image=image))
-
-            # 发送打招呼弹幕
-            tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
-
-            # 记录开播时间
-            sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
-            val = (room_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            with mydb.cursor() as cursor:
-                cursor.execute(sql, val)
-            mydb.commit()
+        await record_danmaku(name=event["data"]["info"][Index.SENDER_INFO_IDX][Index.SENDER_USERNAME_IDX],
+                             received_uid=received_uid,
+                             medal_room=medal_room,
+                             medal_level=medal_level,
+                             text=text,
+                             room_id=room_id,
+                             database=mydb)
 
     @__room.on("PREPARING")
     async def liveEnd(event):
