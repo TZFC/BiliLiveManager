@@ -30,7 +30,7 @@ def summarize(room_id: int) -> (str, str, datetime, datetime):
             field_index = {field_name: index for index, field_name in enumerate(cursor.column_names)}
 
     # 找出路灯关键词
-    room_config = load(open(f"../Configs/config{room_id}.json"))
+    room_config = load(open(f"Configs/config{room_id}.json"))
     email_rows, jump_rows = list(zip(*[
         (
             # email fields
