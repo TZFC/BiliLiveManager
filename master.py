@@ -32,10 +32,11 @@ def bind(room: LiveDanmaku):
         # 解封用户
         if not roomConfigs[room_id]["feature_flags"]["unban"]:
             return
-        sender_uid = event["data"]["data"]["uid"]
-        gift = event['data']['data']['giftName']
-        live_room = liveRooms[room_id]
-        await unban_on_gift(sender_uid=sender_uid, gift=gift, room_id=room_id, live_room=live_room, database=mydb)
+        await unban_on_gift(sender_uid=event["data"]["data"]["uid"],
+                            gift=event['data']['data']['giftName'],
+                            room_id=room_id,
+                            live_room=liveRooms[room_id],
+                            database=mydb)
 
     @__room.on("DANMU_MSG")
     async def recv(event):
