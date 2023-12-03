@@ -10,7 +10,6 @@ from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
 from Utils.BanOnKeyword import ban_on_keyword
-from Utils.BanWithTimeout import ban_with_timeout
 from Utils.EVENT_IDX import Index
 from Utils.UnbanOnGift import unban_on_gift
 
