@@ -45,11 +45,13 @@ def bind(room: LiveDanmaku):
 
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
-            message_type = event["data"]["info"][0][Index.MSG_TYPE_IDX]
-            live_room = liveRooms[room_id]
-            room_config = roomConfigs[room_id]
-            await ban_on_keyword(text=text, message_type=message_type, received_uid=received_uid, room_id=room_id,
-                                 live_room=live_room, room_config=room_config, database=mydb)
+            await ban_on_keyword(text=text,
+                                 message_type=event["data"]["info"][0][Index.MSG_TYPE_IDX],
+                                 received_uid=received_uid,
+                                 room_id=room_id,
+                                 live_room=liveRooms[room_id],
+                                 room_config=roomConfigs[room_id],
+                                 database=mydb)
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         try:
