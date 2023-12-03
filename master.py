@@ -11,6 +11,7 @@ from EmailSender import send_mail_async
 from Summarizer import summarize
 from Utils.BanWithTimeout import ban_with_timeout
 from Utils.EVENT_IDX import Index
+from Utils.UnbanOnGift import unbanOnGift
 
 masterConfig = load(open("Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
@@ -31,24 +32,9 @@ def bind(room: LiveDanmaku):
         if not roomConfigs[room_id]["feature_flags"]["unban"]:
             return
         sender_uid = event["data"]["data"]["uid"]
-        sql = "SELECT reason, time FROM banned WHERE uid=%s AND room_id=%s"
-        val = (sender_uid, room_id)
-        with mydb.cursor() as cursor:
-            cursor.execute(sql, val)
-            result = cursor.fetchall()
-        try:
-            reason, time = result[0]
-        except:
-            return
-        if reason == event['data']['data']['giftName']:
-            asyncio.create_task(liveRooms[room_id].unban_user(uid=sender_uid))
-            sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
-            val = (sender_uid, room_id)
-            with mydb.cursor() as cursor:
-                cursor.execute(sql, val)
-            mydb.commit()
-        else:
-            return
+        gift = event['data']['data']['giftName']
+        live_room = liveRooms[room_id]
+        await unbanOnGift(sender_uid=sender_uid, gift=gift, room_id=room_id, live_room=live_room, database=mydb)
 
     @__room.on("DANMU_MSG")
     async def recv(event):
