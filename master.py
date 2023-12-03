@@ -10,18 +10,7 @@ from CredentialGetter import getCredential
 from EmailSender import send_mail_async
 from Summarizer import summarize
 from Utils.BanWithTimeout import ban_with_timeout
-
-TEXT_IDX = 1
-SENDER_INFO_IDX = 2
-MEDAL_INFO_IDX = 3
-SENDER_UID_IDX = 0
-SENDER_USERNAME_IDX = 1
-MEDAL_LEVEL_IDX = 0
-MEDAL_NAME_IDX = 1
-MEDAL_USERNAME_IDX = 2
-MEDAL_ROOMID_IDX = 3
-MEDAL_STREAMERUID_IDX = -1
-MSG_TYPE_IDX = 12  # event["data"]["info"][0][MSG_TYPE_IDX] text:0 ; emoticon:1
+from Utils.EVENT_IDX import Index
 
 masterConfig = load(open("Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
@@ -64,12 +53,12 @@ def bind(room: LiveDanmaku):
     @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
-        received_uid = event["data"]["info"][SENDER_INFO_IDX][SENDER_UID_IDX]
-        text = event["data"]["info"][TEXT_IDX]
+        received_uid = event["data"]["info"][Index.SENDER_INFO_IDX][Index.SENDER_UID_IDX]
+        text = event["data"]["info"][Index.TEXT_IDX]
 
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
-            if event["data"]["info"][0][MSG_TYPE_IDX] == 0:  # only effective on text MSG
+            if event["data"]["info"][0][Index.MSG_TYPE_IDX] == 0:  # only effective on text MSG
                 for index in range(len(roomConfigs[room_id]["ban_words"])):
                     banned_word = roomConfigs[room_id]["ban_words"][index]
                     if banned_word in text:
@@ -87,12 +76,12 @@ def bind(room: LiveDanmaku):
         # 记录弹幕
         sql = "INSERT INTO danmu (name, uid, text, medal_id, medal_level, time, room_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         try:
-            medal_room = event["data"]["info"][MEDAL_INFO_IDX][MEDAL_ROOMID_IDX]
-            medal_level = event["data"]["info"][MEDAL_INFO_IDX][MEDAL_LEVEL_IDX]
+            medal_room = event["data"]["info"][Index.MEDAL_INFO_IDX][Index.MEDAL_ROOMID_IDX]
+            medal_level = event["data"]["info"][Index.MEDAL_INFO_IDX][Index.MEDAL_LEVEL_IDX]
         except:
             medal_room = 0
             medal_level = 0
-        val = (event["data"]["info"][SENDER_INFO_IDX][SENDER_USERNAME_IDX],
+        val = (event["data"]["info"][Index.SENDER_INFO_IDX][Index.SENDER_USERNAME_IDX],
                received_uid,
                text,
                medal_room,
