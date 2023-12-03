@@ -8,7 +8,7 @@ from mysql.connector import connect
 
 from Utils.BanOnKeyword import ban_on_keyword
 from Utils.CredentialGetter import get_credential
-from Utils.EVENT_IDX import Index
+from Utils.EVENT_IDX import *
 from Utils.EmailSender import send_mail_async
 from Utils.RecordDanmaku import record_danmaku
 from Utils.Summarizer import summarize
@@ -74,13 +74,13 @@ def bind(room: LiveDanmaku):
     @__room.on("DANMU_MSG")
     async def recv(event):
         room_id = event['room_display_id']
-        received_uid = event["data"]["info"][Index.SENDER_INFO_IDX][Index.SENDER_UID_IDX]
-        text = event["data"]["info"][Index.TEXT_IDX]
+        received_uid = event["data"]["info"][SENDER_INFO_IDX][SENDER_UID_IDX]
+        text = event["data"]["info"][TEXT_IDX]
 
         # 封禁关键词
         if roomConfigs[room_id]["feature_flags"]["unban"]:
             await ban_on_keyword(text=text,
-                                 message_type=event["data"]["info"][0][Index.MSG_TYPE_IDX],
+                                 message_type=event["data"]["info"][0][MSG_TYPE_IDX],
                                  received_uid=received_uid,
                                  room_id=room_id,
                                  live_room=liveRooms[room_id],
@@ -88,12 +88,12 @@ def bind(room: LiveDanmaku):
                                  database=mydb)
         # 记录弹幕
         try:
-            medal_room = event["data"]["info"][Index.MEDAL_INFO_IDX][Index.MEDAL_ROOMID_IDX]
-            medal_level = event["data"]["info"][Index.MEDAL_INFO_IDX][Index.MEDAL_LEVEL_IDX]
+            medal_room = event["data"]["info"][MEDAL_INFO_IDX][MEDAL_ROOMID_IDX]
+            medal_level = event["data"]["info"][MEDAL_INFO_IDX][MEDAL_LEVEL_IDX]
         except:
             medal_room = 0
             medal_level = 0
-        await record_danmaku(name=event["data"]["info"][Index.SENDER_INFO_IDX][Index.SENDER_USERNAME_IDX],
+        await record_danmaku(name=event["data"]["info"][SENDER_INFO_IDX][SENDER_USERNAME_IDX],
                              received_uid=received_uid,
                              medal_room=medal_room,
                              medal_level=medal_level,
