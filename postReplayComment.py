@@ -71,7 +71,7 @@ with mydb.cursor() as cursor:
             four_part_date = re.search(r"(\d+)年(\d+)月(\d+)日(\d+)点", title)
             if four_part_date:
                 year, month, day, hour = four_part_date.groups()
-                video_date = datetime(year=eval(year), month=eval(month), day=eval(day), hour=eval(hour))
+                video_date = datetime(year=int(year), month=int(month), day=int(day), hour=int(hour))
             else:
                 three_part_date = re.search(r"(\d+)-(\d+)-(\d+)", title)
                 if not three_part_date:
@@ -79,7 +79,7 @@ with mydb.cursor() as cursor:
                     continue
                 year, month, day = three_part_date.groups()
                 hour = None
-                video_date = datetime(year=eval(year), month=eval(month), day=eval(day))
+                video_date = datetime(year=int(year), month=int(month), day=int(day))
             for start, summary in summaries:
                 if (start, summary) in success:
                     continue
