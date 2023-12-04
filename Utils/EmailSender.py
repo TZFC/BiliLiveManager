@@ -5,15 +5,15 @@ from json import load
 import aiosmtplib
 
 
-async def send_mail_async(sender: str, to: list[str], subject: str, text: str, mimeText: str, image=None,
-                          textType='plain'):
+async def send_mail_async(sender: str, to: list[str], subject: str, text: str, mime_text: str, image=None,
+                          text_type='plain'):
     msg = MIMEMultipart()
     msg['Subject'] = subject
     msg['From'] = sender
     msg['To'] = ', '.join(to)
-    msg.attach(MIMEText(text, textType, 'utf-8'))
+    msg.attach(MIMEText(text, text_type, 'utf-8'))
     if image:
-        msg.attach(MIMEText(f"<html><body><h1>{mimeText}</h1><img src='{image}'></body></html>", "html", "utf-8"))
+        msg.attach(MIMEText(f"<html><body><h1>{mime_text}</h1><img src='{image}'></body></html>", "html", "utf-8"))
     host = "smtp.gmail.com"
     port = 587
     smtp = aiosmtplib.SMTP(hostname=host, port=port, use_tls=False)
