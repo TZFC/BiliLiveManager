@@ -60,7 +60,7 @@ with mydb.cursor() as cursor:
         sql = "SELECT aid FROM postProgress WHERE room_id=%s"
         val = (room_id,)
         cursor.execute(sql, val)
-        prev_aid = cursor.fetchall()[0]
+        prev_aid = cursor.fetchall()[0][0]
         if prev_aid == details[0]['aid']:
             continue
 
