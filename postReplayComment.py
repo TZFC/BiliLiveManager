@@ -24,7 +24,7 @@ with mydb.cursor() as cursor:
         if not roomConfigs[room_id]["feature_flags"]["replay_comment"]:
             continue
         # get available summaries
-        sql = "SELECT start, summary FROM liveTime WHERE room_id=%s AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start DES"
+        sql = "SELECT start, summary FROM liveTime WHERE room_id=%s AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start DESC"
         val = (room_id,)
         cursor.execute(sql, val)
         summaries = cursor.fetchall()
