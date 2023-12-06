@@ -7,6 +7,7 @@ from bilibili_api.live import LiveDanmaku, LiveRoom
 from mysql.connector import connect
 
 from Utils.BanOnKeyword import ban_on_keyword
+from Utils.Checkin import record_checkin
 from Utils.CredentialGetter import get_credential
 from Utils.EVENT_IDX import *
 from Utils.EmailSender import send_mail_async
@@ -114,7 +115,7 @@ def bind(room: LiveDanmaku):
             mydb.commit()
 
             # 提炼路灯邮件文 及 跳转文
-            email_text, jump_text, start_time, end_time = summarize(room_id)
+            email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
             if not any([email_text, jump_text, start_time, end_time]):
                 return
 
@@ -129,6 +130,10 @@ def bind(room: LiveDanmaku):
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text="本期无路灯", mime_text=f"{event}"))
+
+            if roomConfigs[room_id]["feature_flags"]["check_in"]:
+                # 统计直播间发言人
+                await record_checkin(start_time=start_time, end_time=end_time, room_id=room_id, database=mydb)
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
