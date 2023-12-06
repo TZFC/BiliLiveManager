@@ -8,7 +8,7 @@ async def record_checkin(start_time: datetime, end_time: datetime, room_id: int,
         cursor.execute(sql, val)
         checker = cursor.fetchall()
     sql = "INSERT INTO checkin (uid, room_id, attend) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE attend = attend + 1"
-    val = [(uid, room_id, 1) for uid in checker]
+    val = [(uid[0], room_id, 1) for uid in checker]
     with database.cursor() as cursor:
         cursor.executemany(sql, val)
     database.commit()
