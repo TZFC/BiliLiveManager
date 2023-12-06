@@ -131,7 +131,7 @@ def bind(room: LiveDanmaku):
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text="本期无路灯", mime_text=f"{event}"))
 
-            if roomConfigs[room_id]["feature_flags"]["check_in"]:
+            if roomConfigs[room_id]["feature_flags"]["checkin"]:
                 # 统计直播间发言人
                 await record_checkin(start_time=start_time, end_time=end_time, room_id=room_id, database=mydb)
 
