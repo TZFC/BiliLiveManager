@@ -108,6 +108,7 @@ def bind(room: LiveDanmaku):
     async def live_end(event):
         async with asyncio.TaskGroup() as tg:
             room_id = event['room_display_id']
+            print("event received")
 
             # 记录下播时间
             sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
@@ -115,6 +116,7 @@ def bind(room: LiveDanmaku):
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
+            print("logged end time")
 
             # 提炼路灯邮件文 及 跳转文
             email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
