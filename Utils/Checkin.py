@@ -9,7 +9,7 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         cursor.execute(sql, val)
         dedeuserid = int(cursor.fetchall()[0][0])
 
-        sql = "SELECT slot_0, slot_1, slot_2, slot_3, slot_4, slot_5, slot_6, slot_7, slot_8, slot_9 WHERE uid = %s AND room_id = %s"
+        sql = "SELECT slot_0, slot_1, slot_2, slot_3, slot_4, slot_5, slot_6, slot_7, slot_8, slot_9 FROM checkin WHERE uid = %s AND room_id = %s"
         val = (dedeuserid, room_id)
         cursor.execute(sql, val)
         slots: tuple = cursor.fetchall()[0]
