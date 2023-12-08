@@ -15,19 +15,19 @@ def isDeng(row: dict, field_index: dict, room_id: int, room_config) -> bool:
         return False
 
 
-def summarize(room_id: int) -> (str, str, datetime, datetime):
-    with connect(**load(open("Configs/mysql.json"))) as mydb:
-        with mydb.cursor() as cursor:
-            cursor.execute("SELECT start, end FROM liveTime WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL",
-                           (room_id,))
-            result = cursor.fetchall()
-            if not result:
-                return None, None, None, None
-            start_time, end_time = result[0]
-            cursor.execute("SELECT * FROM danmu WHERE room_id = %s AND time BETWEEN %s AND %s",
-                           (room_id, start_time, end_time))
-            raw_danmu = cursor.fetchall()
-            field_index = {field_name: index for index, field_name in enumerate(cursor.column_names)}
+def summarize(room_id: int, database) -> (str, str, datetime, datetime):
+    with database.cursor() as cursor:
+        sql = "SELECT start, end FROM liveTime WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
+        val = (room_id,)
+        cursor.execute(sql, val)
+        result = cursor.fetchall()
+        if not result:
+            return None, None, None, None
+        start_time, end_time = result[0]
+        cursor.execute("SELECT * FROM danmu WHERE room_id = %s AND time BETWEEN %s AND %s",
+                       (room_id, start_time, end_time))
+        raw_danmu = cursor.fetchall()
+        field_index = {field_name: index for index, field_name in enumerate(cursor.column_names)}
 
     # 找出路灯关键词
     room_config = load(open(f"Configs/config{room_id}.json"))

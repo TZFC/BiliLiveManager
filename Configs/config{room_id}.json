@@ -21,11 +21,14 @@
     "辣条",
     "粉丝团灯牌"
   ],
+  "blacklist": [
+  ],
   "repo": "https://space.bilibili.com/654321/channel/seriesdetail?sid=123456&ctype=0",
   "master": "tzfc",
   "feature_flags": {
     "replay_comment": 0,
     "renqi_remind": 0,
-    "unban": 1
+    "unban": 0,
+    "checkin": 0
   }
 }

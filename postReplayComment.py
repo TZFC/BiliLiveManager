@@ -24,14 +24,14 @@ with mydb.cursor() as cursor:
         if not roomConfigs[room_id]["feature_flags"]["replay_comment"]:
             continue
         # get available summaries
-        sql = "SELECT start, summary FROM liveTime WHERE room_id=%s AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start ASC"
+        sql = "SELECT start, summary FROM liveTime WHERE room_id=%s AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start"
         val = (room_id,)
         cursor.execute(sql, val)
         summaries = cursor.fetchall()
         if not summaries:
             continue
 
-        # get all videos in repo
+        # get all videos details in repo
         repo = roomConfigs[room_id]["repo"]
         split_repo = repo.split("/")
         if split_repo[-1] == "video":
@@ -60,13 +60,13 @@ with mydb.cursor() as cursor:
         sql = "SELECT aid FROM postProgress WHERE room_id=%s"
         val = (room_id,)
         cursor.execute(sql, val)
-        prev_aid = cursor.fetchall()[0]
+        prev_aid = cursor.fetchall()[0][0]
         if prev_aid == details[0]['aid']:
             continue
 
         # match each available summary with videos
         success = []
-        for i in range(len(summaries)):
+        for i in reversed(range(len(summaries))):
             title = details[i]["title"]
             four_part_date = re.search(r"(\d+)年(\d+)月(\d+)日(\d+)点", title)
             if four_part_date:
