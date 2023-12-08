@@ -13,7 +13,9 @@ from Utils.EVENT_IDX import *
 from Utils.EmailSender import send_mail_async
 from Utils.RecordDanmaku import record_danmaku
 from Utils.Summarizer import summarize
+from Utils.Uid2Username import uid2username
 from Utils.UnbanOnGift import unban_on_gift
+from web.UpdatePage import update_page
 
 masterConfig = load(open("Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
@@ -133,12 +135,14 @@ def bind(room: LiveDanmaku):
 
             if roomConfigs[room_id]["feature_flags"]["checkin"]:
                 # 统计直播间发言人
-                await record_checkin(start_time=start_time,
-                                     end_time=end_time,
-                                     master=roomConfigs[room_id]['master'],
-                                     blacklist=roomConfigs[room_id]['blacklist'],
-                                     room_id=room_id,
-                                     database=mydb)
+                top_uid_count = await record_checkin(start_time=start_time,
+                                               end_time=end_time,
+                                               master=roomConfigs[room_id]['master'],
+                                               blacklist=roomConfigs[room_id]['blacklist'],
+                                               room_id=room_id,
+                                               database=mydb)
+                top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+                await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转

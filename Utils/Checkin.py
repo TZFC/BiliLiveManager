@@ -1,8 +1,7 @@
 from datetime import datetime
 
-
 async def record_checkin(start_time: datetime, end_time: datetime, master: str, blacklist: list, room_id: int,
-                         database):
+                         database) -> list:
     with database.cursor() as cursor:
         sql = "SELECT dedeuserid FROM credentials WHERE master = %s"
         val = (master,)
@@ -33,4 +32,10 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         sql = f"UPDATE checkin SET slot_{next_head} = 1 where room_id = %s AND uid = %s"
         val = (room_id, dedeuserid)
         cursor.execute(sql, val)
+
+        sql = "SELECT uid, count FROM checkin WHERE room_id = %s SORT BY count DESC LIMIT 10"
+        val = (room_id,)
+        cursor.execute(sql, val)
+        result = cursor.fetchall()
     database.commit()
+    return result
