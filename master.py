@@ -133,7 +133,12 @@ def bind(room: LiveDanmaku):
 
             if roomConfigs[room_id]["feature_flags"]["checkin"]:
                 # 统计直播间发言人
-                await record_checkin(start_time=start_time, end_time=end_time, room_id=room_id, database=mydb)
+                await record_checkin(start_time=start_time,
+                                     end_time=end_time,
+                                     master=roomConfigs[room_id]['master'],
+                                     blacklist=roomConfigs[room_id]['blacklist'],
+                                     room_id=room_id,
+                                     database=mydb)
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
