@@ -41,6 +41,15 @@ def bind(room: LiveDanmaku):
             liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
             liveRooms[check_room_id].credential = masterCredentials[check_room_id]
         room_id = event['room_display_id']
+
+        # 记录开播时间
+        sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
+        val = (room_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+        mydb.commit()
+        print("start logged")
+
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
             info = await liveRooms[room_id].get_room_info()
@@ -54,13 +63,6 @@ def bind(room: LiveDanmaku):
 
             # 发送打招呼弹幕
             tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
-
-            # 记录开播时间
-            sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
-            val = (room_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            with mydb.cursor() as cursor:
-                cursor.execute(sql, val)
-            mydb.commit()
 
     @__room.on("SEND_GIFT")
     async def gift(event):
