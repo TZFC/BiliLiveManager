@@ -13,7 +13,7 @@ async def ban_with_timeout(live_room: LiveRoom, uid: int, timeout: int, database
     try:
         await live_room.unban_user(uid)
     except ResponseCodeException:
-        return
+        pass
     sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
     val = (uid, live_room.room_display_id)
     with database.cursor() as cursor:
