@@ -108,72 +108,71 @@ def bind(room: LiveDanmaku):
 
     @__room.on("PREPARING")
     async def live_end(event):
-        async with asyncio.TaskGroup() as tg:
-            room_id = event['room_display_id']
-            print("event received")
+        room_id = event['room_display_id']
+        print("event received")
 
-            # 记录下播时间
-            sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
-            val = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
+        # 记录下播时间
+        sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
+        val = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+        mydb.commit()
+        print("logged end time")
+
+        # 提炼路灯邮件文 及 跳转文
+        email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
+        if not any([email_text, jump_text, start_time, end_time]):
+            return
+
+        # 寄出邮件
+        if email_text:
+            await send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                                subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
+                                text=email_text, mime_text=f"{event}")
+        else:
+            await send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                                subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
+                                text="本期无路灯", mime_text=f"{event}")
+        print("email sent")
+
+        if roomConfigs[room_id]["feature_flags"]["checkin"]:
+            # 统计直播间发言人
+            top_uid_count = await record_checkin(start_time=start_time,
+                                                 end_time=end_time,
+                                                 master=roomConfigs[room_id]['master'],
+                                                 blacklist=roomConfigs[room_id]['blacklist'],
+                                                 room_id=room_id,
+                                                 database=mydb)
+            print(f"top_uid_count: {top_uid_count}")
+            top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+            print(f"top_username_count: {top_username_count}")
+            await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
+        print("page updated")
+
+        if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
+            # 记录路灯跳转
+            sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
+            if jump_text:
+                val = (jump_text, room_id)
+            else:
+                val = ("N/A", room_id)
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
-            print("logged end time")
-
-            # 提炼路灯邮件文 及 跳转文
-            email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
-            if not any([email_text, jump_text, start_time, end_time]):
-                return
-
-            # 寄出邮件
-            if email_text:
-                tg.create_task(
-                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
-                                    subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text=email_text, mime_text=f"{event}"))
-            else:
-                tg.create_task(
-                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
-                                    subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
-                                    text="本期无路灯", mime_text=f"{event}"))
-
-            if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
-                # 记录路灯跳转
-                sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
-                if jump_text:
-                    val = (jump_text, room_id)
-                else:
-                    val = ("N/A", room_id)
-                with mydb.cursor() as cursor:
-                    cursor.execute(sql, val)
-                mydb.commit()
-            else:
-                # 删除直播场次记录
-                sql = "DELETE FROM liveTime WHERE room_id = %s"
-                val = (room_id,)
-                with mydb.cursor() as cursor:
-                    cursor.execute(sql, val)
-                mydb.commit()
-
-            if roomConfigs[room_id]["feature_flags"]["checkin"]:
-                # 统计直播间发言人
-                top_uid_count = await record_checkin(start_time=start_time,
-                                                     end_time=end_time,
-                                                     master=roomConfigs[room_id]['master'],
-                                                     blacklist=roomConfigs[room_id]['blacklist'],
-                                                     room_id=room_id,
-                                                     database=mydb)
-                print(f"top_uid_count: {top_uid_count}")
-                top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
-                print(f"top_username_count: {top_username_count}")
-                await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
-
-            # 删除弹幕记录
-            sql = "DELETE FROM danmu WHERE room_id = %s"
+        else:
+            # 删除直播场次记录
+            sql = "DELETE FROM liveTime WHERE room_id = %s"
             val = (room_id,)
             with mydb.cursor() as cursor:
                 cursor.execute(sql, val)
             mydb.commit()
+
+        # 删除弹幕记录
+        sql = "DELETE FROM danmu WHERE room_id = %s"
+        val = (room_id,)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+        mydb.commit()
 
 
 for room in liveDanmakus.values():
