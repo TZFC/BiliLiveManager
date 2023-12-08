@@ -29,7 +29,7 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
             if uid not in blacklist and uid != dedeuserid:
                 sql = f"INSERT INTO checkin (room_id, uid, slot_{head}) VALUES(%s, %s, 1) ON DUPLICATE KEY UPDATE slot_{head} = 1"
                 val = (room_id, uid)
-                cursor.executemany(sql, val)
+                cursor.execute(sql, val)
 
         sql = f"UPDATE checkin SET slot_{next_head} = 1 where room_id = %s AND uid = %s"
         val = (room_id, dedeuserid)
