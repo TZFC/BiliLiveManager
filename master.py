@@ -13,7 +13,9 @@ from Utils.EVENT_IDX import *
 from Utils.EmailSender import send_mail_async
 from Utils.RecordDanmaku import record_danmaku
 from Utils.Summarizer import summarize
+from Utils.Uid2Username import uid2username
 from Utils.UnbanOnGift import unban_on_gift
+from web.UpdatePage import update_page
 
 masterConfig = load(open("Configs/masterConfig.json"))
 ROOM_IDS = masterConfig["room_ids"]
@@ -39,6 +41,15 @@ def bind(room: LiveDanmaku):
             liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
             liveRooms[check_room_id].credential = masterCredentials[check_room_id]
         room_id = event['room_display_id']
+
+        # 记录开播时间
+        sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
+        val = (room_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+        mydb.commit()
+        print("start logged")
+
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
             info = await liveRooms[room_id].get_room_info()
@@ -52,13 +63,6 @@ def bind(room: LiveDanmaku):
 
             # 发送打招呼弹幕
             tg.create_task(liveRooms[room_id].send_danmaku(Danmaku("来啦！")))
-
-            # 记录开播时间
-            sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
-            val = (room_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            with mydb.cursor() as cursor:
-                cursor.execute(sql, val)
-            mydb.commit()
 
     @__room.on("SEND_GIFT")
     async def gift(event):
@@ -104,41 +108,47 @@ def bind(room: LiveDanmaku):
 
     @__room.on("PREPARING")
     async def live_end(event):
+        room_id = event['room_display_id']
+        print("event received")
+
+        # 记录下播时间
+        sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
+        val = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+        mydb.commit()
+        print("logged end time")
+
+        # 提炼路灯邮件文 及 跳转文
+        email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
+        if not any([email_text, jump_text, start_time, end_time]):
+            return
+
         async with asyncio.TaskGroup() as tg:
-            room_id = event['room_display_id']
-
-            # 记录下播时间
-            sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
-            val = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
-            with mydb.cursor() as cursor:
-                cursor.execute(sql, val)
-            mydb.commit()
-
-            # 提炼路灯邮件文 及 跳转文
-            email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
-            if not any([email_text, jump_text, start_time, end_time]):
-                return
-
             # 寄出邮件
             if email_text:
-                tg.create_task(
-                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                tg.create_task( send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text=email_text, mime_text=f"{event}"))
             else:
-                tg.create_task(
-                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                tg.create_task( send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text="本期无路灯", mime_text=f"{event}"))
+            print("email sent")
 
             if roomConfigs[room_id]["feature_flags"]["checkin"]:
                 # 统计直播间发言人
-                await record_checkin(start_time=start_time,
-                                     end_time=end_time,
-                                     master=roomConfigs[room_id]['master'],
-                                     blacklist=roomConfigs[room_id]['blacklist'],
-                                     room_id=room_id,
-                                     database=mydb)
+                top_uid_count = await record_checkin(start_time=start_time,
+                                                     end_time=end_time,
+                                                     master=roomConfigs[room_id]['master'],
+                                                     blacklist=roomConfigs[room_id]['blacklist'],
+                                                     room_id=room_id,
+                                                     database=mydb)
+                print(f"top_uid_count: {top_uid_count}")
+                top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+                print(f"top_username_count: {top_username_count}")
+                await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
+            print("page updated")
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
@@ -158,12 +168,12 @@ def bind(room: LiveDanmaku):
                     cursor.execute(sql, val)
                 mydb.commit()
 
-            # 删除弹幕记录
-            sql = "DELETE FROM danmu WHERE room_id = %s"
-            val = (room_id,)
-            with mydb.cursor() as cursor:
-                cursor.execute(sql, val)
-            mydb.commit()
+        # 删除弹幕记录
+        sql = "DELETE FROM danmu WHERE room_id = %s"
+        val = (room_id,)
+        with mydb.cursor() as cursor:
+            cursor.execute(sql, val)
+        mydb.commit()
 
 
 for room in liveDanmakus.values():
