@@ -133,17 +133,6 @@ def bind(room: LiveDanmaku):
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text="本期无路灯", mime_text=f"{event}"))
 
-            if roomConfigs[room_id]["feature_flags"]["checkin"]:
-                # 统计直播间发言人
-                top_uid_count = await record_checkin(start_time=start_time,
-                                               end_time=end_time,
-                                               master=roomConfigs[room_id]['master'],
-                                               blacklist=roomConfigs[room_id]['blacklist'],
-                                               room_id=room_id,
-                                               database=mydb)
-                top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
-                await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
-
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
                 sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
@@ -161,6 +150,19 @@ def bind(room: LiveDanmaku):
                 with mydb.cursor() as cursor:
                     cursor.execute(sql, val)
                 mydb.commit()
+
+            if roomConfigs[room_id]["feature_flags"]["checkin"]:
+                # 统计直播间发言人
+                top_uid_count = await record_checkin(start_time=start_time,
+                                                     end_time=end_time,
+                                                     master=roomConfigs[room_id]['master'],
+                                                     blacklist=roomConfigs[room_id]['blacklist'],
+                                                     room_id=room_id,
+                                                     database=mydb)
+                print(f"top_uid_count: {top_uid_count}")
+                top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+                print(f"top_username_count: {top_username_count}")
+                await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
 
             # 删除弹幕记录
             sql = "DELETE FROM danmu WHERE room_id = %s"
