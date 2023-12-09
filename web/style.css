@@ -10,9 +10,12 @@ p {
     font-size: 40px;
     line-height: 40px;
 }
-
-.10 {
-    color: #ffe628;
-    font-size: 600px;
-    line-height: 600px;
+._10 {
+    color: #ffe656;
+    font-size: 60px;
+}
+._10::before {
+    color: #ffe656;
+    font-size: 60px;
+    content: "老公 ";
 }
