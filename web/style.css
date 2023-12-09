@@ -1,0 +1,26 @@
+@import url("https://fonts.googleapis.com/css?family=Ma%20Shan%20Zheng");
+
+body {
+  overflow: hidden;
+  background-color: transparent;
+}
+p {
+    color: #5e84f;
+    font-family: "Ma Shan Zheng", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "\5FAE \8F6F \96C5 \9ED1 ", SimHei, Arial, sans-serif;
+    font-size: 40px;
+    line-height: 40px;
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: #91cef0;
+    border-radius: 15px 50px;
+    background: rgba(137, 126, 255, 0.3);
+    padding: 20px;
+}
+._10::before {
+    content: "老公 ";
+}
+._10{
+    color: #f7b900;
+    font-size: 50px;
+    -webkit-text-stroke-width: 2px;
+    -webkit-text-stroke-color: #a17800;
+}

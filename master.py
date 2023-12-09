@@ -48,7 +48,6 @@ def bind(room: LiveDanmaku):
         with mydb.cursor() as cursor:
             cursor.execute(sql, val)
         mydb.commit()
-        print("start logged")
 
         async with asyncio.TaskGroup() as tg:
             # 发送开播提醒
@@ -109,7 +108,6 @@ def bind(room: LiveDanmaku):
     @__room.on("PREPARING")
     async def live_end(event):
         room_id = event['room_display_id']
-        print("event received")
 
         # 记录下播时间
         sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
@@ -117,7 +115,6 @@ def bind(room: LiveDanmaku):
         with mydb.cursor() as cursor:
             cursor.execute(sql, val)
         mydb.commit()
-        print("logged end time")
 
         # 提炼路灯邮件文 及 跳转文
         email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
@@ -127,14 +124,15 @@ def bind(room: LiveDanmaku):
         async with asyncio.TaskGroup() as tg:
             # 寄出邮件
             if email_text:
-                tg.create_task( send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                tg.create_task(
+                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text=email_text, mime_text=f"{event}"))
             else:
-                tg.create_task( send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
+                tg.create_task(
+                    send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text="本期无路灯", mime_text=f"{event}"))
-            print("email sent")
 
             if roomConfigs[room_id]["feature_flags"]["checkin"]:
                 # 统计直播间发言人
@@ -144,11 +142,8 @@ def bind(room: LiveDanmaku):
                                                      blacklist=roomConfigs[room_id]['blacklist'],
                                                      room_id=room_id,
                                                      database=mydb)
-                print(f"top_uid_count: {top_uid_count}")
                 top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
-                print(f"top_username_count: {top_username_count}")
                 await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
-            print("page updated")
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
