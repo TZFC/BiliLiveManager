@@ -1,0 +1,15 @@
+@import url("https://fonts.googleapis.com/css?family=Ma%20Shan%20Zheng");
+
+body {
+  overflow: hidden;
+  background-color: transparent;
+}
+p {
+    color: #5e84f;
+    font-family: "Ma Shan Zheng", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "\5FAE \8F6F \96C5 \9ED1 ", SimHei, Arial, sans-serif;
+    font-size: 40px;
+    line-height: 20px;
+}
+p #10 {
+    color: #ffe628;
+}
