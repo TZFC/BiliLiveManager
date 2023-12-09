@@ -21,8 +21,6 @@
     "辣条",
     "粉丝团灯牌"
   ],
-  "blacklist": [
-  ],
   "repo": "https://space.bilibili.com/654321/channel/seriesdetail?sid=123456&ctype=0",
   "master": "tzfc",
   "feature_flags": {

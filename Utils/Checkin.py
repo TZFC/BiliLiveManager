@@ -1,6 +1,6 @@
 from datetime import datetime
 
-async def record_checkin(start_time: datetime, end_time: datetime, master: str, blacklist: list, room_id: int,
+async def record_checkin(start_time: datetime, end_time: datetime, master: str, room_id: int,
                          database) -> list:
     with database.cursor() as cursor:
         sql = "SELECT dedeuserid FROM credentials WHERE master = %s"
@@ -24,6 +24,11 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         sql = f"UPDATE checkin SET slot_{head} = 0 WHERE room_id = %s"
         val = (room_id,)
         cursor.execute(sql, val)
+
+        sql = "SELECT uid FROM blacklist"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        blacklist = {uid[0] for uid in result}
 
         for uid in unique_uid:
             if uid not in blacklist and uid != dedeuserid:
