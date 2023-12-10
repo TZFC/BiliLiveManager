@@ -1,6 +1,6 @@
 from datetime import datetime
 
-async def record_checkin(start_time: datetime, end_time: datetime, master: str, blacklist: list, room_id: int,
+async def record_checkin(start_time: datetime, end_time: datetime, master: str, room_id: int,
                          database) -> list:
     with database.cursor() as cursor:
         sql = "SELECT dedeuserid FROM credentials WHERE master = %s"
@@ -25,6 +25,11 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         val = (room_id,)
         cursor.execute(sql, val)
 
+        sql = "SELECT uid FROM blacklist"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        blacklist = {uid[0] for uid in result}
+
         for uid in unique_uid:
             if uid not in blacklist and uid != dedeuserid:
                 sql = f"INSERT INTO checkin (room_id, uid, slot_{head}) VALUES(%s, %s, 1) ON DUPLICATE KEY UPDATE slot_{head} = 1"
@@ -35,8 +40,8 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         val = (room_id, dedeuserid)
         cursor.execute(sql, val)
 
-        sql = "SELECT uid, count FROM checkin WHERE room_id = %s ORDER BY count DESC LIMIT 10"
-        val = (room_id,)
+        sql = "SELECT uid, count FROM checkin WHERE room_id = %s AND uid <> %s ORDER BY count DESC LIMIT 10"
+        val = (room_id, dedeuserid)
         cursor.execute(sql, val)
         result = cursor.fetchall()
     database.commit()
