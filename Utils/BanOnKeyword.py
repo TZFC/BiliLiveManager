@@ -14,6 +14,8 @@ async def ban_on_keyword(text: str, message_type: int, received_uid: int, room_i
             banned_word = room_config["ban_words"][index]
             if banned_word in text:
                 offense[room_config["ban_timeout"][index]] = room_config["unban_gift"][index]
+        if not offense:
+            return
         max_timeout = max(offense.keys())
         max_reason = offense[max_timeout]
         asyncio.create_task(ban_with_timeout(live_room=live_room,
