@@ -66,7 +66,7 @@ with mydb.cursor() as cursor:
 
         # match each available summary with videos
         success = []
-        for i in reversed(range(len(summaries))):
+        for i in reversed(range(max(len(summaries), len(details)))):
             title = details[i]["title"]
             four_part_date = re.search(r"(\d+)年(\d+)月(\d+)日(\d+)点", title)
             if four_part_date:
