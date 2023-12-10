@@ -22,13 +22,11 @@ def summarize(room_id: int, database) -> (str, str, datetime, datetime):
         cursor.execute(sql, val)
         result = cursor.fetchall()
         if not result:
-            print("no result!")
             return None, None, None, None
         start_time, end_time = result[0]
         cursor.execute("SELECT * FROM danmu WHERE room_id = %s AND time BETWEEN %s AND %s",
                        (room_id, start_time, end_time))
         raw_danmu = cursor.fetchall()
-        print(f"raw_danmu{raw_danmu}")
         field_index = {field_name: index for index, field_name in enumerate(cursor.column_names)}
 
     # 找出路灯关键词
@@ -51,7 +49,6 @@ def summarize(room_id: int, database) -> (str, str, datetime, datetime):
     ])) or ([], [])
     email_text = "\n".join(email_rows)
     jump_text = "\n".join(jump_rows)
-    print(email_text, jump_text, start_time, end_time)
 
     # //TODO: find where ? and haha is and report in email_text
     return email_text, jump_text, start_time, end_time
