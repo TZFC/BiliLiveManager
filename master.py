@@ -118,7 +118,7 @@ def bind(room: LiveDanmaku):
 
         # 提炼路灯邮件文 及 跳转文
         email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
-        if not any([email_text, jump_text, start_time, end_time]):
+        if not any([email_text, start_time, end_time]):
             return
 
         async with asyncio.TaskGroup() as tg:
