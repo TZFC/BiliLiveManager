@@ -142,7 +142,6 @@ def bind(room: LiveDanmaku):
                 top_uid_count = await record_checkin(start_time=start_time,
                                                      end_time=end_time,
                                                      master=roomConfigs[room_id]['master'],
-                                                     blacklist=roomConfigs[room_id]['blacklist'],
                                                      room_id=room_id,
                                                      database=mydb)
                 top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
