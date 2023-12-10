@@ -118,8 +118,6 @@ def bind(room: LiveDanmaku):
 
         # 提炼路灯邮件文 及 跳转文
         email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
-        if not any([email_text, jump_text, start_time, end_time]):
-            return
 
         async with asyncio.TaskGroup() as tg:
             # 寄出邮件
@@ -139,7 +137,6 @@ def bind(room: LiveDanmaku):
                 top_uid_count = await record_checkin(start_time=start_time,
                                                      end_time=end_time,
                                                      master=roomConfigs[room_id]['master'],
-                                                     blacklist=roomConfigs[room_id]['blacklist'],
                                                      room_id=room_id,
                                                      database=mydb)
                 top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
