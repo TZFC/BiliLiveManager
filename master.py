@@ -118,24 +118,26 @@ def bind(room: LiveDanmaku):
 
         # 提炼路灯邮件文 及 跳转文
         email_text, jump_text, start_time, end_time = summarize(room_id, database=mydb)
-        if not any([email_text, start_time, end_time]):
-            print("got returned!")
-            return
+        print("In master:")
+        print(email_text, jump_text, start_time, end_time)
 
         async with asyncio.TaskGroup() as tg:
             # 寄出邮件
             if email_text:
+                print("email text")
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text=email_text, mime_text=f"{event}"))
             else:
+                print("no email text")
                 tg.create_task(
                     send_mail_async(sender=masterConfig["username"], to=roomConfigs[room_id]["listener_email"],
                                     subject=f"{roomConfigs[room_id]['nickname']}于{start_time}路灯",
                                     text="本期无路灯", mime_text=f"{event}"))
 
             if roomConfigs[room_id]["feature_flags"]["checkin"]:
+                print("start checkin")
                 # 统计直播间发言人
                 top_uid_count = await record_checkin(start_time=start_time,
                                                      end_time=end_time,
@@ -144,6 +146,7 @@ def bind(room: LiveDanmaku):
                                                      room_id=room_id,
                                                      database=mydb)
                 top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+                print("checkin count ready: ", top_username_count)
                 await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
@@ -157,6 +160,7 @@ def bind(room: LiveDanmaku):
                     cursor.execute(sql, val)
                 mydb.commit()
             else:
+                print("start delete livetime")
                 # 删除直播场次记录
                 sql = "DELETE FROM liveTime WHERE room_id = %s"
                 val = (room_id,)
@@ -165,6 +169,7 @@ def bind(room: LiveDanmaku):
                 mydb.commit()
 
         # 删除弹幕记录
+        print("start delete danmu")
         sql = "DELETE FROM danmu WHERE room_id = %s"
         val = (room_id,)
         with mydb.cursor() as cursor:
