@@ -2,13 +2,12 @@ import asyncio
 from datetime import datetime
 
 from Utils.BanWithTimeout import ban_with_timeout
+from Utils.EVENT_IDX import TEXT_TYPE
 
-TEXT_MSG = 0
 
-
-async def ban_on_keyword(text: str, message_type: int, received_uid: int, room_id: int, live_room, room_config,
-                         database):
-    if message_type == TEXT_MSG:
+async def ban_on_keyword(text: str, message_type: int, received_uid: int, room_id: int,
+                         live_room, room_config, database):
+    if message_type == TEXT_TYPE:
         offense = {}  # timeout : reason
         for index in range(len(room_config["ban_words"])):
             banned_word = room_config["ban_words"][index]
