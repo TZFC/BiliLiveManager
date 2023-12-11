@@ -1,8 +1,7 @@
 from datetime import datetime
 
-NUM_SLOTS = 30
 
-async def record_checkin(start_time: datetime, end_time: datetime, master: str, room_id: int,
+async def record_checkin(start_time: datetime, end_time: datetime, master: str, room_id: int, checkin_days: int,
                          database) -> list:
     with database.cursor() as cursor:
         sql = "SELECT dedeuserid FROM credentials WHERE master = %s"
@@ -12,15 +11,15 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
 
         sql_prefix = "SELECT slot_0"
         sql_postfix = " FROM checkin WHERE uid = %s AND room_id = %s"
-        sql=""
-        for i in range(1, NUM_SLOTS):
-            sql+=f", slot_{i}"
+        sql = ""
+        for i in range(1, checkin_days):
+            sql += f", slot_{i}"
         sql = sql_prefix + sql + sql_postfix
         val = (dedeuserid, room_id)
         cursor.execute(sql, val)
         slots: tuple = cursor.fetchall()[0]
         head = slots.index(1)
-        next_head = head + 1 if head != NUM_SLOTS-1 else 0
+        next_head = head + 1 if head != checkin_days - 1 else 0
 
         sql = "SELECT DISTINCT uid FROM danmu WHERE room_id = %s AND time BETWEEN %s AND %s"
         val = (room_id, start_time, end_time)

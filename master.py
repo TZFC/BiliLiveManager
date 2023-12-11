@@ -138,9 +138,12 @@ def bind(room: LiveDanmaku):
                                                      end_time=end_time,
                                                      master=roomConfigs[room_id]['master'],
                                                      room_id=room_id,
+                                                     checkin_days=roomConfigs[room_id]['checkin_days'],
                                                      database=mydb)
                 top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
-                await update_page(target=f"/var/www/html/{room_id}.html", content=top_username_count)
+                await update_page(target=f"/var/www/html/{room_id}.html",
+                                  checkin_days=roomConfigs[room_id]['checkin_days'],
+                                  content=top_username_count)
 
             if roomConfigs[room_id]["feature_flags"]["replay_comment"]:
                 # 记录路灯跳转
