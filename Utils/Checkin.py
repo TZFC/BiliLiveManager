@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from Utils.EVENT_IDX import TEXT_TYPE
+
 
 async def record_checkin(start_time: datetime, end_time: datetime, master: str, room_id: int, checkin_days: int,
                          database) -> list:
@@ -38,7 +40,8 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
 
         for uid in unique_uid:
             if uid not in blacklist and uid != dedeuserid:
-                sql = f"INSERT INTO checkin (room_id, uid, slot_{head}) VALUES(%s, %s, 1) ON DUPLICATE KEY UPDATE slot_{head} = 1"
+                sql = (f"INSERT INTO checkin (room_id, uid, slot_{head}) VALUES(%s, %s, 1) "
+                       f"ON DUPLICATE KEY UPDATE slot_{head} = 1")
                 val = (room_id, uid)
                 cursor.execute(sql, val)
 
@@ -46,7 +49,9 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         val = (room_id, dedeuserid)
         cursor.execute(sql, val)
 
-        sql = "SELECT uid, count FROM checkin WHERE room_id = %s AND uid <> %s ORDER BY count DESC LIMIT 10"
+        sql = (f"SELECT uid, count FROM checkin "
+               f"WHERE room_id = %s AND uid <> %s AND type = {TEXT_TYPE} "
+               f"ORDER BY count DESC LIMIT 10")
         val = (room_id, dedeuserid)
         cursor.execute(sql, val)
         result = cursor.fetchall()
