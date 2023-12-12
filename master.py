@@ -170,6 +170,7 @@ def bind(room: LiveDanmaku):
 for room in liveDanmakus.values():
     bind(room)
 
+
 def update_credential():
     # 重载直播间设置, 刷新Credential
     for check_room_id in ROOM_IDS:
@@ -178,10 +179,12 @@ def update_credential():
         liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
         liveRooms[check_room_id].credential = masterCredentials[check_room_id]
 
+
 async def update_credential_periodic():
     while True:
         update_credential()
-        await asyncio.sleep(10*60)
+        await asyncio.sleep(10 * 60)
+
 
 if __name__ == "__main__":
     sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()], update_credential_periodic()))
