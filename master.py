@@ -34,6 +34,8 @@ def bind(room: LiveDanmaku):
         if "live_time" not in event["data"].keys():
             # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
             return
+        update_credentials()
+
         room_id = event['room_display_id']
 
         # 记录开播时间
@@ -171,7 +173,7 @@ for room in liveDanmakus.values():
     bind(room)
 
 
-def update_credential():
+def update_credentials():
     # 重载直播间设置, 刷新Credential
     for check_room_id in ROOM_IDS:
         roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
@@ -180,11 +182,9 @@ def update_credential():
         liveRooms[check_room_id].credential = masterCredentials[check_room_id]
 
 
-async def update_credential_periodic():
-    while True:
-        update_credential()
-        await asyncio.sleep(10 * 60)
-
-
 if __name__ == "__main__":
-    sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()], update_credential_periodic()))
+    try:
+        sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()]))
+    except Warning:
+        update_credentials()
+        raise Warning
