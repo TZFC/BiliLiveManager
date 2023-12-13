@@ -1,29 +1,51 @@
-@import url("https://fonts.googleapis.com/css?family=Ma%20Shan%20Zheng");
-
-body {
-  overflow: hidden;
-  background-color: transparent;
+@keyframes banner{
+    from{
+        left:calc(0% + 100vw)
+    }
+    to{
+        left:calc(-100% + 100vw)
+    }
 }
-p {
-    width: fit-content;
-    color: #5e84f;
-    font-family: "Ma Shan Zheng", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "\5FAE \8F6F \96C5 \9ED1 ", SimHei, Arial, sans-serif;
-    font-size: 40px;
-    line-height: 40px;
-    -webkit-text-stroke-width: 1px;
-    -webkit-text-stroke-color: #91cef0;
-    border-radius: 15px 45px;
-    background: rgba(137, 126, 255, 0.3);
-    padding: 20px;
-    margin-bottom: 10px;
-    margin-top: 10px;
+html,body,p{
+    margin:0;
+    padding:0
 }
-._10::before {
-    content: "老公 ";
+html{
+    position:absolute
 }
-._10{
-    color: #f7b900;
-    font-size: 50px;
-    -webkit-text-stroke-width: 2px;
-    -webkit-text-stroke-color: #a17800;
+body::before{
+    content:"敲沐鱼功德榜:";
+    color:#fff;
+    margin:0
+}
+body{
+    margin:0;
+    color:#fff;
+    animation:banner 20s linear infinite;
+    background-color:transparent;
+    position:relative;
+    width:fit-content;
+    font-size:40px;
+    line-height:40px;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","\5FAE \8F6F \96C5 \9ED1 ",SimHei,Arial,sans-serif;
+    font-weight:700;
+    text-shadow:2px 2px #000;
+    overflow-x:scroll;
+    white-space:nowrap
+}
+p{
+    padding:0 10px;
+    display:inline
+}
+._30::before{
+    content:"老公 "
+}
+._30{
+    color:#fbff28
+}
+#_1::before{
+	content:"小男友： "
+}
+#_1{
+	color：#00f
 }

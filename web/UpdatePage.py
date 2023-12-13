@@ -1,5 +1,7 @@
 async def update_page(target, checkin_days, content):
-    new_content = "\n".join([f"<p class=_{count}>{username} {count}/{checkin_days}</p>" for username, count in content])
+    new_content = "\n".join(
+        [f"<p class=_{count} id=_{rank + 1}>{username} {count}/{checkin_days}</p>" for rank, (username, count) in
+         enumerate(content)])
     with open("web/ROOM_ID.html") as file:
         template = file.read()
     before, after = template.split("<p>")
