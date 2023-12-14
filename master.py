@@ -65,7 +65,6 @@ def bind(live_danmaku: LiveDanmaku):
 
     @__live_danmaku.on("PREPARING")
     async def live_end(event):
-        print(event)
         event_room_id = event['room_display_id']
         await handle_preparing(event=event,
                                database=mydb,
@@ -80,7 +79,8 @@ def bind(live_danmaku: LiveDanmaku):
 
     @__live_danmaku.on("ALL")
     async def any_event(event):
-        print(event)
+        # print(event)
+        pass
 
 
 for room_id in ROOM_IDS:
