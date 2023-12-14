@@ -78,6 +78,10 @@ def bind(live_danmaku: LiveDanmaku):
         event_room_id = __live_danmaku.room_display_id
         reload_room_config(update_room_id=event_room_id, room_config=roomConfigs[event_room_id])
 
+    @__live_danmaku.on("ALL")
+    async def any_event(event):
+        print(event)
+
 
 for room_id in ROOM_IDS:
     bind(roomConfigs[room_id]['live_danmaku'])
