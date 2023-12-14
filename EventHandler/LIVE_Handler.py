@@ -13,7 +13,7 @@ async def handle_live(event, database, master_config, live_room, room_config):
         return
     room_id = event['room_display_id']
     reload_room_config(update_room_id=room_id, room_config=room_config)
-    start = datetime.fromtimestamp(event['live_time'])
+    start = datetime.fromtimestamp(event['data']['live_time'])
     info = await live_room.get_room_info()
 
     async with asyncio.TaskGroup() as tg:
