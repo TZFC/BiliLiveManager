@@ -11,5 +11,4 @@ async def top_checkin(master: str, room_id: int, database) -> list:
         val = (room_id, dedeuserid)
         cursor.execute(sql, val)
         result = cursor.fetchall()
-    database.commit()
     return result

@@ -5,6 +5,7 @@ from Utils.EmailSender import send_mail_async
 from Utils.Summarizer import summarize
 from datetime import datetime
 
+from Utils.TopCheckin import top_checkin
 from Utils.Uid2Username import uid2username
 from web.UpdatePage import update_page
 
@@ -36,12 +37,13 @@ async def handle_preparing(event, database, master_config, live_room, room_confi
 
         if room_config["feature_flags"]["checkin"]:
             # 统计直播间发言人
-            top_uid_count = await record_checkin(start_time=start_time,
-                                                 end_time=end_time,
-                                                 master=room_config['master'],
-                                                 room_id=room_id,
-                                                 checkin_days=room_config['checkin_days'],
-                                                 database=database)
+            await record_checkin(start_time=start_time,
+                                 end_time=end_time,
+                                 master=room_config['master'],
+                                 room_id=room_id,
+                                 checkin_days=room_config['checkin_days'],
+                                 database=database)
+            top_uid_count = await top_checkin(master=room_config['master'], room_id=room_id, database=database)
             top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
             await update_page(target=f"/var/www/html/{room_id}.html",
                               checkin_days=room_config['checkin_days'],
