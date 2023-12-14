@@ -3,33 +3,33 @@ import time
 from json import load
 
 from bilibili_api import sync, Danmaku
-from bilibili_api.live import LiveRoom
+from mysql.connector import connect
 
-from Utils.CredentialGetter import get_credential
+from Utils.EVENT_IDX import LIVE_STATUS_STREAMING
+from Utils.ReloadRoomConfig import reload_room_config
 
 path = os.getcwd()
 with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
     masterConfig = load(masterConfigFile)
+with open(os.path.join(path, "Configs/mysql.json")) as mysqlFile:
+    mydb = connect(**load(mysqlFile))
+
 ROOM_IDS = masterConfig["room_ids"]
 roomConfigs = {}
-for room in ROOM_IDS:
-    with open(os.path.join(path, f"Configs/config{room}.json")) as roomConfigFile:
-        roomConfigs[room] = load(roomConfigFile)
-masterCredentials = {room: get_credential(roomConfigs[room]["master"]) for room in ROOM_IDS}
-liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
-
 for room_id in ROOM_IDS:
-    if not roomConfigs[room_id]["feature_flags"]["renqi_remind"]:
+    roomConfigs[room_id] = {}
+    reload_room_config(update_room_id=room_id, room_config=roomConfigs[room_id])
+    if not roomConfigs[room_id]['room_config']["feature_flags"]["renqi_remind"]:
         continue
     # 查询是否正在直播
-    info = sync(liveRooms[room_id].get_room_info())
+    info = sync(roomConfigs[room_id]['live_room'].get_room_info())
     live_status = info['room_info']['live_status']
-    if live_status != 1:
+    if live_status != LIVE_STATUS_STREAMING:
         continue
     # 查询是否已经直播至少一小时
     live_start_time = info['room_info']['live_start_time']
     if live_start_time + 3600 > time.time():
         continue
-    sync(liveRooms[room_id].send_danmaku(Danmaku("点点上方免费人气票！")))
-    sync(liveRooms[room_id].send_popular_ticket())
+    sync(roomConfigs[room_id]['live_room'].send_danmaku(Danmaku("点点上方免费人气票！")))
+    sync(roomConfigs[room_id]['live_room'].send_popular_ticket())
     time.sleep(5)
