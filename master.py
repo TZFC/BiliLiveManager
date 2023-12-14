@@ -1,4 +1,5 @@
 import asyncio
+import os
 from datetime import datetime
 from json import load
 
@@ -17,13 +18,19 @@ from Utils.Uid2Username import uid2username
 from Utils.UnbanOnGift import unban_on_gift
 from web.UpdatePage import update_page
 
-masterConfig = load(open("Configs/masterConfig.json"))
+path = os.getcwd()
+with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
+    masterConfig = load(masterConfigFile)
 ROOM_IDS = masterConfig["room_ids"]
-roomConfigs = {room: load(open(f"Configs/config{room}.json")) for room in ROOM_IDS}
+roomConfigs = {}
+for room in ROOM_IDS:
+    with open(os.path.join(path, f"Configs/config{room}.json")) as roomConfigFile:
+        roomConfigs[room] = load(roomConfigFile)
 masterCredentials = {room: get_credential(roomConfigs[room]["master"]) for room in ROOM_IDS}
 liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
-mydb = connect(**load(open("Configs/mysql.json")))
+with open("Configs/mysql.json") as mysqlFile:
+    mydb = connect(**load(mysqlFile))
 
 
 def bind(room: LiveDanmaku):

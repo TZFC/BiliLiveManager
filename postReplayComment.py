@@ -13,11 +13,16 @@ from mysql.connector import connect
 from Utils.CredentialGetter import get_credential
 
 path = os.getcwd()
-masterConfig = load(open(os.path.join(path, "Configs/masterConfig.json")))
+with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
+    masterConfig = load(masterConfigFile)
 ROOM_IDS = masterConfig["room_ids"]
-roomConfigs = {room: load(open(os.path.join(path, f"Configs/config{room}.json"))) for room in ROOM_IDS}
+roomConfigs = {}
+for room in ROOM_IDS:
+    with open(os.path.join(path, f"Configs/config{room}.json")) as roomConfigFile:
+        roomConfigs[room] = load(roomConfigFile)
 masterCredentials = {room: get_credential(roomConfigs[room]["master"]) for room in ROOM_IDS}
-mydb = connect(**load(open("Configs/mysql.json")))
+with open("Configs/mysql.json") as mysqlFile:
+    mydb = connect(**load(mysqlFile))
 
 with mydb.cursor() as cursor:
     for room_id in ROOM_IDS:
