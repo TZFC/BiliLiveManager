@@ -75,7 +75,8 @@ def bind(live_danmaku: LiveDanmaku):
 
     @__live_danmaku.on("TIMEOUT")
     async def timeout():
-        reload_room_config(update_room_id=__live_danmaku.room_display_id, room_configs=roomConfigs)
+        event_room_id = __live_danmaku.room_display_id
+        reload_room_config(update_room_id=event_room_id, room_config=roomConfigs[event_room_id])
 
 
 for room_id in ROOM_IDS:
