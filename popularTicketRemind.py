@@ -3,7 +3,6 @@ import time
 from json import load
 
 from bilibili_api import sync, Danmaku
-from mysql.connector import connect
 
 from Utils.EVENT_IDX import LIVE_STATUS_STREAMING
 from Utils.ReloadRoomConfig import reload_room_config
