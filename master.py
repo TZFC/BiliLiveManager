@@ -10,7 +10,7 @@ from EventHandler.DANMU_MSG_handler import handle_danmu_msg
 from EventHandler.LIVE_Handler import handle_live
 from EventHandler.PREPARING_handler import handle_preparing
 from EventHandler.SEND_GIFT_handler import handle_send_gift
-from Utils.CredentialGetter import get_credential
+from Utils.ReloadRoomConfig import reload_room_config
 
 path = os.getcwd()
 with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
@@ -30,13 +30,7 @@ roomConfigs
 roomConfigs = {}
 for room_id in ROOM_IDS:
     roomConfigs[room_id] = {}
-    with open(os.path.join(path, f"Configs/config{room_id}.json")) as roomConfigFile:
-        config = load(roomConfigFile)
-    credential = get_credential(config["master"])
-    roomConfigs[room_id]['room_config'] = config
-    roomConfigs[room_id]['master_credential'] = credential
-    roomConfigs[room_id]['live_danmaku'] = LiveDanmaku(room_id, credential=credential)
-    roomConfigs[room_id]['live_room'] = LiveRoom(room_id, credential=credential)
+    reload_room_config(update_room_id=room_id, room_config=roomConfigs[room_id])
 
 
 def bind(live_danmaku: LiveDanmaku):
@@ -81,23 +75,11 @@ def bind(live_danmaku: LiveDanmaku):
 
     @__live_danmaku.on("TIMEOUT")
     async def timeout():
-        update_config(__live_danmaku.room_display_id)
+        reload_room_config(update_room_id=__live_danmaku.room_display_id, room_configs=roomConfigs)
 
 
 for room_id in ROOM_IDS:
     bind(roomConfigs[room_id]['live_danmaku'])
-
-
-def update_config(update_room_id: int):
-    # 重载直播间设置, 刷新Credential
-    with open(os.path.join(path, f"Configs/config{room_id}.json")) as update_roomConfigFile:
-        update_config = load(update_roomConfigFile)
-    update_credential = get_credential(update_config["master"])
-    roomConfigs[update_room_id]['room_config'] = update_config
-    roomConfigs[update_room_id]['master_credential'] = update_credential
-    roomConfigs[update_room_id]['live_danmaku'] = LiveDanmaku(update_room_id, credential=update_credential)
-    roomConfigs[update_room_id]['live_room'] = LiveRoom(update_room_id, credential=update_credential)
-
 
 if __name__ == "__main__":
     try:

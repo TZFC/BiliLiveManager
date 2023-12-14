@@ -1,9 +1,10 @@
 import asyncio
 
 from Utils.EmailSender import send_mail_async
-from master import update_config
 from datetime import datetime
 from bilibili_api import Danmaku
+
+from Utils.ReloadRoomConfig import reload_room_config
 
 
 async def handle_live(event, database, master_config, live_room, room_config):
@@ -11,7 +12,7 @@ async def handle_live(event, database, master_config, live_room, room_config):
         # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
         return
     room_id = event['room_display_id']
-    update_config(room_id)
+    reload_room_config(update_room_id=room_id, room_config=room_config)
     start = datetime.fromtimestamp(event['live_time'])
     info = await live_room.get_room_info()
 
