@@ -3,7 +3,7 @@ import os
 from json import load
 
 from bilibili_api import sync
-from bilibili_api.live import LiveDanmaku, LiveRoom
+from bilibili_api.live import LiveDanmaku
 from mysql.connector import connect
 
 from EventHandler.DANMU_MSG_handler import handle_danmu_msg

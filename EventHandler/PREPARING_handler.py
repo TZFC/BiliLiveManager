@@ -1,10 +1,9 @@
 import asyncio
+from datetime import datetime
 
 from Utils.Checkin import record_checkin
 from Utils.EmailSender import send_mail_async
 from Utils.Summarizer import summarize
-from datetime import datetime
-
 from Utils.TopCheckin import get_top_k_checkin
 from Utils.Uid2Username import uid2username
 from web.UpdatePage import update_page
@@ -43,7 +42,8 @@ async def handle_preparing(event, database, master_config, live_room, room_confi
                                  room_id=room_id,
                                  checkin_days=room_config['checkin_days'],
                                  database=database)
-            top_uid_count = await get_top_k_checkin(master=room_config['master'], room_id=room_id, database=database, top_k=10)
+            top_uid_count = await get_top_k_checkin(master=room_config['master'], room_id=room_id, database=database,
+                                                    top_k=10)
             top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
             await update_page(target=f"/var/www/html/{room_id}.html",
                               checkin_days=room_config['checkin_days'],

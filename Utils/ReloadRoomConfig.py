@@ -1,8 +1,9 @@
 import os
 from json import load
 
-from Utils.CredentialGetter import get_credential
 from bilibili_api.live import LiveDanmaku, LiveRoom
+
+from Utils.CredentialGetter import get_credential
 
 path = os.getcwd()
 
