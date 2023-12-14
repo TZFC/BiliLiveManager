@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta
 from json import load
 
-from mysql.connector import connect
-
 OFFSET = timedelta(seconds=30)
 
 

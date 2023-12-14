@@ -1,4 +1,5 @@
 import asyncio
+import os
 from datetime import datetime
 from json import load
 
@@ -17,13 +18,19 @@ from Utils.Uid2Username import uid2username
 from Utils.UnbanOnGift import unban_on_gift
 from web.UpdatePage import update_page
 
-masterConfig = load(open("Configs/masterConfig.json"))
+path = os.getcwd()
+with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
+    masterConfig = load(masterConfigFile)
 ROOM_IDS = masterConfig["room_ids"]
-roomConfigs = {room: load(open(f"Configs/config{room}.json")) for room in ROOM_IDS}
+roomConfigs = {}
+for room in ROOM_IDS:
+    with open(os.path.join(path, f"Configs/config{room}.json")) as roomConfigFile:
+        roomConfigs[room] = load(roomConfigFile)
 masterCredentials = {room: get_credential(roomConfigs[room]["master"]) for room in ROOM_IDS}
 liveDanmakus = {room: LiveDanmaku(room, credential=masterCredentials[room]) for room in ROOM_IDS}
 liveRooms = {room: LiveRoom(room, credential=masterCredentials[room]) for room in ROOM_IDS}
-mydb = connect(**load(open("Configs/mysql.json")))
+with open("Configs/mysql.json") as mysqlFile:
+    mydb = connect(**load(mysqlFile))
 
 
 def bind(room: LiveDanmaku):
@@ -34,6 +41,8 @@ def bind(room: LiveDanmaku):
         if "live_time" not in event["data"].keys():
             # 直播姬开播会有两次LIVE，其中一次没有live_time，以此去重
             return
+        update_credentials()
+
         room_id = event['room_display_id']
 
         # 记录开播时间
@@ -171,20 +180,19 @@ for room in liveDanmakus.values():
     bind(room)
 
 
-def update_credential():
+def update_credentials():
     # 重载直播间设置, 刷新Credential
     for check_room_id in ROOM_IDS:
-        roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
+        with open(f"Configs/config{check_room_id}.json") as configFile:
+            roomConfigs[check_room_id] = load(configFile)
         masterCredentials[check_room_id] = get_credential(roomConfigs[check_room_id]["master"])
         liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
         liveRooms[check_room_id].credential = masterCredentials[check_room_id]
 
 
-async def update_credential_periodic():
-    while True:
-        update_credential()
-        await asyncio.sleep(10 * 60)
-
-
 if __name__ == "__main__":
-    sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()], update_credential_periodic()))
+    try:
+        sync(asyncio.gather(*[room.connect() for room in liveDanmakus.values()]))
+    except Warning:
+        update_credentials()
+        raise Warning
