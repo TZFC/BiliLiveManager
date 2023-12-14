@@ -4,7 +4,7 @@ from Utils.EVENT_IDX import TEXT_TYPE
 
 
 async def record_checkin(start_time: datetime, end_time: datetime, master: str, room_id: int, checkin_days: int,
-                         database) -> list:
+                         database):
     with database.cursor() as cursor:
         sql = "SELECT dedeuserid FROM credentials WHERE master = %s"
         val = (master,)
@@ -50,11 +50,4 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         val = (room_id, dedeuserid)
         cursor.execute(sql, val)
 
-        sql = ("SELECT uid, count FROM checkin "
-               f"WHERE room_id = %s AND uid <> %s "
-               f"ORDER BY count DESC LIMIT 10")
-        val = (room_id, dedeuserid)
-        cursor.execute(sql, val)
-        result = cursor.fetchall()
-    database.commit()
-    return result
+
