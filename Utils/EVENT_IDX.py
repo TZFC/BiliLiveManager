@@ -11,3 +11,4 @@ MEDAL_STREAMERUID_IDX = -1
 MSG_TYPE_IDX = 12  # event["data"]["info"][0][MSG_TYPE_IDX] text:0 ; emoticon:1
 TEXT_TYPE = 0
 EMOTICON_TYPE = 1
+LIVE_STATUS_STREAMING = 1

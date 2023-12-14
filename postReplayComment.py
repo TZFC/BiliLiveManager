@@ -10,23 +10,23 @@ from bilibili_api.comment import send_comment, CommentResourceType
 from bilibili_api.user import User
 from mysql.connector import connect
 
-from Utils.CredentialGetter import get_credential
+from Utils.ReloadRoomConfig import reload_room_config
 
 path = os.getcwd()
 with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
     masterConfig = load(masterConfigFile)
+with open(os.path.join(path, "Configs/mysql.json")) as mysqlFile:
+    mydb = connect(**load(mysqlFile))
+
 ROOM_IDS = masterConfig["room_ids"]
 roomConfigs = {}
-for room in ROOM_IDS:
-    with open(os.path.join(path, f"Configs/config{room}.json")) as roomConfigFile:
-        roomConfigs[room] = load(roomConfigFile)
-masterCredentials = {room: get_credential(roomConfigs[room]["master"]) for room in ROOM_IDS}
-with open("Configs/mysql.json") as mysqlFile:
-    mydb = connect(**load(mysqlFile))
+for room_id in ROOM_IDS:
+    roomConfigs[room_id] = {}
+    reload_room_config(update_room_id=room_id, room_config=roomConfigs[room_id])
 
 with mydb.cursor() as cursor:
     for room_id in ROOM_IDS:
-        if not roomConfigs[room_id]["feature_flags"]["replay_comment"]:
+        if not roomConfigs[room_id]['room_config']["feature_flags"]["replay_comment"]:
             continue
         # get available summaries
         sql = "SELECT start, summary FROM liveTime WHERE room_id=%s AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start"
@@ -41,7 +41,7 @@ with mydb.cursor() as cursor:
         split_repo = repo.split("/")
         if split_repo[-1] == "video":
             uid = split_repo[-2]
-            repo_owner = User(uid=uid, credential=masterCredentials[room_id])
+            repo_owner = User(uid=uid, credential=roomConfigs[room_id]['master_credential'])
             videos = sync(repo_owner.get_videos())
             details = videos['list']['vlist']
         else:
@@ -51,7 +51,7 @@ with mydb.cursor() as cursor:
             while True:
                 try:
                     channel = ChannelSeries(uid=uid, type_=channel_series_type, id_=series_id,
-                                            credential=masterCredentials[room_id])
+                                            credential=roomConfigs[room_id]['master_credential'])
                     break
                 except:
                     time.sleep(1)
@@ -92,14 +92,14 @@ with mydb.cursor() as cursor:
                     if start.year == video_date.year and start.month == video_date.month and start.day == video_date.day:
                         if summary != "N/A":
                             sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
-                                              credential=masterCredentials[room_id]))
+                                              credential=roomConfigs[room_id]['master_credential']))
                         success.append((start, summary))
                         break
                 else:
                     if abs(start - video_date) < timedelta(hours=1):
                         if summary != "N/A":
                             sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
-                                              credential=masterCredentials[room_id]))
+                                              credential=roomConfigs[room_id]['master_credential']))
                         success.append((start, summary))
                         break
 
