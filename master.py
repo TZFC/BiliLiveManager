@@ -59,7 +59,7 @@ def bind(room: LiveDanmaku):
                 sender=masterConfig["username"],
                 to=roomConfigs[room_id]["listener_email"],
                 subject=f"{roomConfigs[room_id]['nickname']}开始直播{info['room_info']['title']}",
-                text=f"{event}",
+                text=f"https://live.bilibili.com/{room_id}",
                 mime_text=info['room_info']['area_name'],
                 image=info['room_info']['cover']))
 
