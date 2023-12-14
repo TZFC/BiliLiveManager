@@ -32,7 +32,7 @@ for room_id in ROOM_IDS:
     roomConfigs[room_id] = {}
     reload_room_config(update_room_id=room_id, room_config=roomConfigs[room_id])
 
-
+event_types = {'LIVE', 'SEND_GIFT', 'DANMU_MSG', 'PREPARING'}
 def bind(live_danmaku: LiveDanmaku):
     __live_danmaku = live_danmaku
 
@@ -80,7 +80,9 @@ def bind(live_danmaku: LiveDanmaku):
 
     @__live_danmaku.on("ALL")
     async def any_event(event):
-        print(event)
+        if event['type'] not in event_types:
+            print(event)
+            event_types.add(event['type'])
 
 
 for room_id in ROOM_IDS:
