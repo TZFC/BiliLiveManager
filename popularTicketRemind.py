@@ -11,8 +11,6 @@ from Utils.ReloadRoomConfig import reload_room_config
 path = os.getcwd()
 with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
     masterConfig = load(masterConfigFile)
-with open(os.path.join(path, "Configs/mysql.json")) as mysqlFile:
-    mydb = connect(**load(mysqlFile))
 
 ROOM_IDS = masterConfig["room_ids"]
 roomConfigs = {}
