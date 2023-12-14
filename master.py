@@ -176,7 +176,8 @@ for room in liveDanmakus.values():
 def update_credentials():
     # 重载直播间设置, 刷新Credential
     for check_room_id in ROOM_IDS:
-        roomConfigs[check_room_id] = load(open(f"Configs/config{check_room_id}.json"))
+        with open(f"Configs/config{check_room_id}.json") as configFile:
+            roomConfigs[check_room_id] = load(configFile)
         masterCredentials[check_room_id] = get_credential(roomConfigs[check_room_id]["master"])
         liveDanmakus[check_room_id].credential = masterCredentials[check_room_id]
         liveRooms[check_room_id].credential = masterCredentials[check_room_id]
