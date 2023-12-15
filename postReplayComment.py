@@ -37,7 +37,7 @@ with mydb.cursor() as cursor:
             continue
 
         # get all videos details in repo
-        repo = roomConfigs[room_id]["repo"]
+        repo = roomConfigs[room_id]['room_config']["repo"]
         split_repo = repo.split("/")
         if split_repo[-1] == "video":
             uid = split_repo[-2]
