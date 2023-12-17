@@ -87,11 +87,4 @@ for room_id in ROOM_IDS:
     bind(roomConfigs[room_id]['live_danmaku'])
 
 if __name__ == "__main__":
-    try:
-        sync(asyncio.gather(*[roomConfigs[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS]))
-    except Warning as w:
-        print(w)
-        raise w
-    except Exception as e:
-        print(e)
-        raise e
+    sync(asyncio.gather(*[roomConfigs[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS]))
