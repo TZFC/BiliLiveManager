@@ -1,6 +1,5 @@
 import asyncio
 import os
-from datetime import datetime
 from json import load, loads
 
 from bilibili_api import sync
@@ -12,8 +11,6 @@ from EventHandler.LIVE_Handler import handle_live
 from EventHandler.OTHER_handler import handle_dm_interaction, handle_super_chat_message
 from EventHandler.PREPARING_handler import handle_preparing
 from EventHandler.SEND_GIFT_handler import handle_send_gift
-from Utils.EVENT_IDX import TEXT_TYPE
-from Utils.RecordDanmaku import record_danmaku
 from Utils.ReloadRoomConfig import reload_room_config
 
 path = os.getcwd()
