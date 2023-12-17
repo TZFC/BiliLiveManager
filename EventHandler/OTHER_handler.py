@@ -10,9 +10,10 @@ async def handle_dm_interaction(event, database, master_config, live_room, room_
     try:
         data = loads(event['data']['data']['data'])
         content = "--" + data['combo'][0]['content']
+        id = event['data']['data']['id']
         await record_danmaku(name="他们都在说", received_uid=0, time=datetime.now().replace(microsecond=0),
                              medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE, room_id=room_id,
-                             database=database)
+                             danmu_id=id, database=database)
         return
     except:
         pass
@@ -33,6 +34,6 @@ async def handle_super_chat_message(event, database, master_config, live_room, r
             medal_level = 0
         await record_danmaku(name=name, received_uid=uid, time=datetime.fromtimestamp(timestamp), medal_room=medal_room,
                              medal_level=medal_level, text=content, message_type=TEXT_TYPE, room_id=room_id,
-                             database=database)
+                             danmu_id=None, database=database)
     except:
         pass
