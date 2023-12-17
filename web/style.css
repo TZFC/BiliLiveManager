@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+HK:wght@700&family=Noto+Serif+JP:wght@700&family=Noto+Serif+SC:wght@700&family=Noto+Serif+TC:wght@700&display=swap');
 @keyframes banner{
     from{
-        left:calc(0% + 100vw);
+        left:calc(0% + 120vw);
     }
     to{
-        left:calc(-100% + 100vw);
+        left:calc(-100% - 20vw);
     }
 }
-html,body,p{
-    margin:0;
-    padding:0;
+html,body{
+    margin:0px;
+    padding:0px;
 }
 html{
     position:absolute;
@@ -34,18 +34,21 @@ body{
 }
 p{
     display:inline;
+    margin:0px 20px;
 }
 ._30::before{
     content:"老公 ";
+    margin:0px;
 }
 ._30{
     color:#fbff28;
 }
 #_1::before{
 	content:"小男友： ";
+	margin:0px;
 }
 #_1{
-    color:#00f;
+    color:#76ea8f;
 }
 #_6, #_7, #_8, #_9, #_10{
     display: none;
