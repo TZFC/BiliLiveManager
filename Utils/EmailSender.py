@@ -1,8 +1,11 @@
+import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from json import load
 
 import aiosmtplib
+
+path = os.getcwd()
 
 
 async def send_mail_async(sender: str, to: list[str], subject: str, text: str, mime_text: str, image=None,
@@ -18,7 +21,8 @@ async def send_mail_async(sender: str, to: list[str], subject: str, text: str, m
     port = 587
     smtp = aiosmtplib.SMTP(hostname=host, port=port, use_tls=False)
     await smtp.connect()
-    login_info = load(open("Configs/masterConfig.json"))
+    with open(os.path.join(path, "Configs/masterConfig.json")) as mysqlFile:
+        login_info = load(mysqlFile)
     await smtp.login(login_info["username"], login_info["password"])
     await smtp.send_message(msg)
     await smtp.quit()
