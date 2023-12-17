@@ -35,4 +35,5 @@ async def handle_danmu_msg(event, database, master_config, live_room, room_confi
                          text=text,
                          message_type=message_type,
                          room_id=room_id,
+                         danmu_id=None,
                          database=database)
