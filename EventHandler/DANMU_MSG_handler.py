@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from Utils.BanOnKeyword import ban_on_keyword
 from Utils.EVENT_IDX import *
 from Utils.RecordDanmaku import record_danmaku
@@ -27,6 +29,7 @@ async def handle_danmu_msg(event, database, master_config, live_room, room_confi
         medal_level = 0
     await record_danmaku(name=event["data"]["info"][SENDER_INFO_IDX][SENDER_USERNAME_IDX],
                          received_uid=received_uid,
+                         time=datetime.fromtimestamp(event['data']["info"][TIMESTAMP_IDX]['ts']),
                          medal_room=medal_room,
                          medal_level=medal_level,
                          text=text,
