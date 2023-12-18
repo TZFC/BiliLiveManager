@@ -22,7 +22,7 @@ async def handle_danmu_msg(event, database, master_config, live_room, room_confi
         # 主播及master指令
         if received_uid in {int(credential.dedeuserid), streamer_uid}:
             if "checkin" in text:
-                info = await room_config['live_room'].get_room_info()
+                info = await live_room.get_room_info()
                 live_status = info['room_info']['live_status']
                 if live_status == LIVE_STATUS_STREAMING \
                         and room_config["feature_flags"]["checkin"] \
