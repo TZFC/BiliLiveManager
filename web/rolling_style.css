@@ -1,40 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+HK:wght@700&family=Noto+Serif+JP:wght@700&family=Noto+Serif+SC:wght@700&family=Noto+Serif+TC:wght@700&display=swap');
-@keyframes banner{
+@keyframes scrollup{
     from{
-        left:calc(0% + 120vw);
+        transform: translateY(calc(100% + 100vh));
     }
     to{
-        left:calc(-100% - 20vw);
+        transform: translateY(calc(-100% - 20vh));
     }
 }
 html,body{
-    margin:0px;
+    margin: 0px;
     padding:0px;
 }
 html{
     position:absolute;
 }
 body::before{
-    content:"敲沐鱼功德榜:";
-    color:#fff;
+    content:"敲沐鱼功德榜";
+    color:#0f0;
 }
 body{
     color:#fff;
-    animation:banner 10s linear infinite;
+    animation:scrollup 10s linear infinite;
     background-color:transparent;
     position:relative;
     width:fit-content;
-    font-size:40px;
-    line-height:40px;
+    font-size:50px;
+    line-height:50px;
     font-family:'Noto Serif SC', 'Noto Serif TC', 'Noto Serif HK', 'Noto Serif JP';
     font-weight:700;
     text-shadow:2px 2px #000;
+    text-align: center;
     overflow-x:hidden;
+    overflow-y:hidden;
     white-space:nowrap;
 }
 p{
-    display:inline;
-    margin:0px 20px;
+    margin: 50px;
+    text-align: center;
 }
 ._30::before{
     content:"老公 ";
@@ -49,7 +51,4 @@ p{
 }
 #_1{
     color:#76ea8f;
-}
-#_6, #_7, #_8, #_9, #_10{
-    display: none;
 }

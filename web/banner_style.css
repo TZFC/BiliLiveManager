@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+HK:wght@700&family=Noto+Serif+JP:wght@700&family=Noto+Serif+SC:wght@700&family=Noto+Serif+TC:wght@700&display=swap');
+@keyframes banner{
+    from{
+        left:calc(0% + 120vw);
+    }
+    to{
+        left:calc(-100% - 20vw);
+    }
+}
+html,body{
+    margin:0px;
+    padding:0px;
+}
+html{
+    position:absolute;
+}
+body::before{
+    content:"敲沐鱼功德榜:"; /* 标题 */
+    color:#fff;
+}
+body{
+    color:#fff; /* 正文颜色 */
+    animation:banner 10s linear infinite; /* 滚动时间 */
+    background-color:transparent;
+    position:relative;
+    width:fit-content;
+    font-size:40px; /* 正文字号 */
+    line-height:40px;
+    font-family:'Noto Serif SC', 'Noto Serif TC', 'Noto Serif HK', 'Noto Serif JP'; /* 正文字体 */
+    font-weight:700; /* 正文加粗 */
+    text-shadow:2px 2px #000; /* 正文阴影 */
+    overflow-x:hidden;
+    white-space:nowrap;
+}
+p{
+    margin:0px 20px;  /* 段落间距 竖向 横向 */
+    display: none;
+}
+#_1 ._30 .top::before{  /* 排名第一且30场全勤头衔 */
+    content:"老公 ";
+    margin:0px;
+}
+#_1 ._30 .top{  /* 排名第一且30场全勤颜色 */
+    color:#fbff28;
+}
+.top{ /* 并列第一 */
+    display: inline; /* 显示 */
+}
+#_1::before{
+	content:"小男友： "; /* 当前第一名头衔（会被全勤覆写） */
+	margin:0px;
+}
+#_1{
+    color:#76ea8f;/* 当前第一名颜色（会被全勤覆写） */
+}
+#_1，#_2，#_3 { /* 前三名 */
+    display: inline; /* 显示 */
+}
