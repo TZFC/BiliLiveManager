@@ -11,7 +11,7 @@ from Utils.Uid2Username import uid2username
 from web.UpdatePage import update_page
 
 
-async def handle_danmu_msg(event, database, master_config, live_room, room_config):
+async def handle_danmu_msg(event, database, master_config, live_room, room_config, credential):
     room_id = event['room_display_id']
     received_uid = event["data"]["info"][SENDER_INFO_IDX][SENDER_UID_IDX]
     text = event["data"]["info"][TEXT_IDX]
@@ -39,7 +39,7 @@ async def handle_danmu_msg(event, database, master_config, live_room, room_confi
                                          room_id=room_id,
                                          checkin_days=room_config['checkin_days'],
                                          database=database)
-                    top_uid_count = await get_top_k_checkin(master_uid=room_config['master_credential'].dedeuserid,
+                    top_uid_count = await get_top_k_checkin(master_uid=credential.dedeuserid,
                                                             room_id=room_id, database=database, top_k=10)
                     top_uid_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
                     tg.create_task(send_report_checkin(live_room=live_room, top_uid_username_count=top_uid_username_count))

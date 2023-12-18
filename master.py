@@ -75,7 +75,8 @@ def bind(live_danmaku: LiveDanmaku):
                                database=mydb,
                                master_config=masterConfig,
                                live_room=roomConfigs[event_room_id]['live_room'],
-                               room_config=roomConfigs[event_room_id]['room_config'])
+                               room_config=roomConfigs[event_room_id]['room_config'],
+                               credential=roomConfigs[event_room_id]['master_credential'])
 
     @__live_danmaku.on("PREPARING")
     async def live_end(event):
@@ -84,7 +85,8 @@ def bind(live_danmaku: LiveDanmaku):
                                database=mydb,
                                master_config=masterConfig,
                                live_room=roomConfigs[event_room_id]['live_room'],
-                               room_config=roomConfigs[event_room_id]['room_config'])
+                               room_config=roomConfigs[event_room_id]['room_config'],
+                               credential=roomConfigs[event_room_id]['master_credential'])
 
     @__live_danmaku.on("TIMEOUT")
     async def timeout():
