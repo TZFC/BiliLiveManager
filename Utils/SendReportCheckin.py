@@ -3,7 +3,7 @@ import asyncio
 from bilibili_api import Danmaku
 
 
-async def send_report_checkin(live_room, top_uid_count):
-    for rank, (uid, count) in enumerate(top_uid_count):
-        await live_room.send_danmaku(Danmaku(f"以 {count} 次打卡获得第 {rank+1} 名"), reply_mid=uid)
+async def send_report_checkin(live_room, top_uid_username_count):
+    for rank, (uid, username, count) in enumerate(top_uid_username_count):
+        await live_room.send_danmaku(Danmaku(f"第{rank+1}名 {username} 打卡{count}次"), reply_mid=uid)
         await asyncio.sleep(5)

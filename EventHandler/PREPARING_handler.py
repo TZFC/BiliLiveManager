@@ -45,10 +45,10 @@ async def handle_preparing(event, database, master_config, live_room, room_confi
                                      database=database)
                 top_uid_count = await get_top_k_checkin(master_uid=room_config['master_credential'].dedeuserid,
                                                         room_id=room_id, database=database, top_k=10)
-                top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+                top_uid_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
                 tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",
                                            checkin_days=room_config['checkin_days'],
-                                           content=top_username_count))
+                                           content=top_uid_username_count))
             else:
                 room_config['state']['pre-checkin'] = False
 
