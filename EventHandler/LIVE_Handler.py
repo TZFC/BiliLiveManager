@@ -27,7 +27,7 @@ async def handle_live(event, database, master_config, room_info):
             image=info['room_info']['cover']))
 
         # 发送打招呼弹幕
-        tg.create_task(room_info.send_danmaku(Danmaku("来啦！")))
+        tg.create_task(room_info['live_room'].send_danmaku(Danmaku("来啦！")))
 
         # 记录开播时间
         sql = "INSERT INTO liveTime (room_id, start) VALUES (%s, %s)"
