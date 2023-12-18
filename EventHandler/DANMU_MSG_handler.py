@@ -31,7 +31,7 @@ async def handle_danmu_msg(event, database, master_config, live_room, room_confi
                         sql = "SELECT start FROM liveTime WHERE room_id = %s AND end IS NULL AND summary IS NULL"
                         val = (room_id,)
                         cursor.execute(sql, val)
-                        start_time = cursor.fetchall()[0]
+                        start_time = cursor.fetchall()[0][0]
                     # 统计直播间发言人
                     await record_checkin(start_time=start_time,
                                          end_time=datetime.fromtimestamp(event['data']["info"][TIMESTAMP_IDX]['ts']),
