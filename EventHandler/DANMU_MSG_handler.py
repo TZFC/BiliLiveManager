@@ -20,7 +20,7 @@ async def handle_danmu_msg(event, database, master_config, live_room, room_confi
     async with (asyncio.TaskGroup() as tg):
         # 主播及master指令
         streamer_uid = await live_room._LiveRoom__get_ruid()
-        if received_uid in {room_config['master_credential'].dedeuserid, streamer_uid}:
+        if received_uid in {credential.dedeuserid, streamer_uid}:
             if "checkin" in text:
                 info = await room_config['live_room'].get_room_info()
                 live_status = info['room_info']['live_status']
@@ -31,7 +31,7 @@ async def handle_danmu_msg(event, database, master_config, live_room, room_confi
                         sql = "SELECT start FROM liveTime WHERE room_id = %s AND end IS NULL AND summary IS NULL"
                         val = (room_id,)
                         cursor.execute(sql, val)
-                        start_time = cursor.fetchall()[0][0]
+                        start_time = cursor.fetchall()[0]
                     # 统计直播间发言人
                     await record_checkin(start_time=start_time,
                                          end_time=datetime.fromtimestamp(event['data']["info"][TIMESTAMP_IDX]['ts']),
