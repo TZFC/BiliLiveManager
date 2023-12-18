@@ -109,4 +109,4 @@ for room_id in ROOM_IDS:
     bind(roomInfos[room_id]['live_danmaku'])
 
 if __name__ == "__main__":
-    sync(asyncio.gather(*[roomInfo[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS]))
+    sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS]))
