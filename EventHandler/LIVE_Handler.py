@@ -14,7 +14,7 @@ async def handle_live(event, database, master_config, room_info):
     room_id = event['room_display_id']
     reload_room_info(update_room_id=room_id, room_info=room_info['room_config'])
     start = datetime.fromtimestamp(event['data']['live_time'])
-    info = await room_info.get_room_info()
+    info = await room_info['live_room'].get_room_info()
 
     async with asyncio.TaskGroup() as tg:
         # 发送开播提醒
