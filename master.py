@@ -1,6 +1,6 @@
 import asyncio
 import os
-from json import load, loads
+from json import load
 
 from bilibili_api import sync
 from bilibili_api.live import LiveDanmaku
@@ -27,6 +27,7 @@ roomConfigs
         - 'master_credential': <>
         - 'live_danmaku': <>
         - 'live_room': <>
+        - ‘state’: <>
 '''
 roomConfigs = {}
 for room_id in ROOM_IDS:
