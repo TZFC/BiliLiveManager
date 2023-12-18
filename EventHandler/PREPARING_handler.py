@@ -27,12 +27,12 @@ async def handle_preparing(event, database, master_config, room_info):
             tg.create_task(
                 send_mail_async(sender=master_config["username"], to=room_info['room_config']["listener_email"],
                                 subject=f"{room_info['room_config']['nickname']}于{start_time}路灯",
-                                text=email_text, mime_text=f"{event}"))
+                                text=email_text))
         else:
             tg.create_task(
                 send_mail_async(sender=master_config["username"], to=room_info['room_config']["listener_email"],
                                 subject=f"{room_info['room_config']['nickname']}于{start_time}路灯",
-                                text="本期无路灯", mime_text=f"{event}"))
+                                text="本期无路灯"))
 
         if room_info['room_config']["feature_flags"]["checkin"]:
             if not room_info['state']['pre-checkin']:

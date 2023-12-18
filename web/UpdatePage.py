@@ -4,9 +4,9 @@ async def update_page(target, checkin_days, content):
     for rank, (uid, username, count) in enumerate(content):
         top_class = 'top' if count == highest_count else 'not_top'
         count_class = f"_{count}"
-        id = f"_{rank + 1}"
+        html_id = f"_{rank + 1}"
         name = username if username else str(uid)
-        new_content.append(f'<p id={id} class="{top_class} {count_class}">{name} {count}/{checkin_days}</p>')
+        new_content.append(f'<p id={html_id} class="{top_class} {count_class}">{name} {count}/{checkin_days}</p>')
     new_paragraphs = "\n".join(new_content)
     with open("web/ROOM_ID.html") as file:
         template = file.read()
