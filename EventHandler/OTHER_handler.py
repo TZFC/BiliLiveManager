@@ -5,7 +5,7 @@ from Utils.EVENT_IDX import *
 from Utils.RecordDanmaku import record_danmaku
 
 
-async def handle_dm_interaction(event, database, master_config, live_room, room_config):
+async def handle_dm_interaction(event, database, master_config, room_info):
     room_id = event['room_display_id']
     try:
         data = loads(event['data']['data']['data'])
@@ -19,7 +19,7 @@ async def handle_dm_interaction(event, database, master_config, live_room, room_
         pass
 
 
-async def handle_super_chat_message(event, database, master_config, live_room, room_config):
+async def handle_super_chat_message(event, database, master_config, room_info):
     room_id = event['room_display_id']
     try:
         name = event['data']['data']['user_info']['uname']
