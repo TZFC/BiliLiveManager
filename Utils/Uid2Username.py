@@ -8,4 +8,6 @@ async def uid2username(uid_count):
     if not info['name']:
         await sleep(1)
         info = await user.get_user_info()
+        if not info['name']:
+            info['name'] = str(uid_count[0])
     return info['name'], uid_count[1]
