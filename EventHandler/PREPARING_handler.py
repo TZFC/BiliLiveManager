@@ -35,19 +35,22 @@ async def handle_preparing(event, database, master_config, live_room, room_confi
                                 text="本期无路灯", mime_text=f"{event}"))
 
         if room_config["feature_flags"]["checkin"]:
-            # 统计直播间发言人
-            await record_checkin(start_time=start_time,
-                                 end_time=end_time,
-                                 master=room_config['master'],
-                                 room_id=room_id,
-                                 checkin_days=room_config['checkin_days'],
-                                 database=database)
-            top_uid_count = await get_top_k_checkin(master_uid=room_config['master_credential'].dedeuserid,
-                                                    room_id=room_id, database=database, top_k=10)
-            top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
-            await update_page(target=f"/var/www/html/{room_id}.html",
-                              checkin_days=room_config['checkin_days'],
-                              content=top_username_count)
+            if not room_config['state']['pre-checkin']:
+                # 统计直播间发言人
+                await record_checkin(start_time=start_time,
+                                     end_time=end_time,
+                                     master=room_config['master'],
+                                     room_id=room_id,
+                                     checkin_days=room_config['checkin_days'],
+                                     database=database)
+                top_uid_count = await get_top_k_checkin(master_uid=room_config['master_credential'].dedeuserid,
+                                                        room_id=room_id, database=database, top_k=10)
+                top_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+                tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",
+                                           checkin_days=room_config['checkin_days'],
+                                           content=top_username_count))
+            else:
+                room_config['state']['pre-checkin'] = False
 
         if room_config["feature_flags"]["replay_comment"]:
             # 记录路灯跳转
