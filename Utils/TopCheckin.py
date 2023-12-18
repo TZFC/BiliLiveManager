@@ -11,7 +11,7 @@ async def get_top_k_checkin(master_uid: int, room_id: int, database, top_k: int)
 async def get_top_checkin(master_uid: int, room_id: int, database) -> list:
     with database.cursor() as cursor:
         sql = ("SELECT uid, count FROM checkin "
-               f"WHERE room_id = %s AND uid <> %s AND count > 0"
+               f"WHERE room_id = %s AND uid <> %s AND count > 0 "
                f"ORDER BY count DESC")
         val = (room_id, master_uid)
         cursor.execute(sql, val)
