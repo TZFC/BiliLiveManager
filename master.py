@@ -11,7 +11,7 @@ from EventHandler.LIVE_Handler import handle_live
 from EventHandler.OTHER_handler import handle_dm_interaction, handle_super_chat_message
 from EventHandler.PREPARING_handler import handle_preparing
 from EventHandler.SEND_GIFT_handler import handle_send_gift
-from Utils.ReloadRoomConfig import reload_room_config
+from Utils.ReloadRoomConfig import reload_room_info
 
 path = os.getcwd()
 with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
@@ -21,7 +21,7 @@ with open(os.path.join(path, "Configs/mysql.json")) as mysqlFile:
 
 ROOM_IDS = masterConfig["room_ids"]
 '''
-roomConfigs
+roomInfos
     - <room_id>:
         - 'room_config': <>
         - 'master_credential': <>
@@ -29,10 +29,10 @@ roomConfigs
         - 'live_room': <>
         - ‘state’: <>
 '''
-roomConfigs = {}
+roomInfos = {}
 for room_id in ROOM_IDS:
-    roomConfigs[room_id] = {}
-    reload_room_config(update_room_id=room_id, room_config=roomConfigs[room_id])
+    roomInfos[room_id] = {}
+    reload_room_info(update_room_id=room_id, room_info=roomInfos[room_id])
 
 event_types = {
     'LIVE', 'SEND_GIFT', 'DANMU_MSG', 'PREPARING', 'VERIFICATION_SUCCESSFUL', 'VIEW', 'ONLINE_RANK_COUNT',
@@ -56,8 +56,7 @@ def bind(live_danmaku: LiveDanmaku):
         await handle_live(event=event,
                           database=mydb,
                           master_config=masterConfig,
-                          live_room=roomConfigs[event_room_id]['live_room'],
-                          room_config=roomConfigs[event_room_id]['room_config'])
+                          room_info=roomInfos[event_room_id])
 
     @__live_danmaku.on("SEND_GIFT")
     async def gift(event):
@@ -65,8 +64,7 @@ def bind(live_danmaku: LiveDanmaku):
         await handle_send_gift(event=event,
                                database=mydb,
                                master_config=masterConfig,
-                               live_room=roomConfigs[event_room_id]['live_room'],
-                               room_config=roomConfigs[event_room_id]['room_config'])
+                               room_info=roomInfos[event_room_id])
 
     @__live_danmaku.on("DANMU_MSG")
     async def recv(event):
@@ -74,9 +72,7 @@ def bind(live_danmaku: LiveDanmaku):
         await handle_danmu_msg(event=event,
                                database=mydb,
                                master_config=masterConfig,
-                               live_room=roomConfigs[event_room_id]['live_room'],
-                               room_config=roomConfigs[event_room_id]['room_config'],
-                               credential=roomConfigs[event_room_id]['master_credential'])
+                               room_info=roomInfos[event_room_id])
 
     @__live_danmaku.on("PREPARING")
     async def live_end(event):
@@ -84,14 +80,12 @@ def bind(live_danmaku: LiveDanmaku):
         await handle_preparing(event=event,
                                database=mydb,
                                master_config=masterConfig,
-                               live_room=roomConfigs[event_room_id]['live_room'],
-                               room_config=roomConfigs[event_room_id]['room_config'],
-                               credential=roomConfigs[event_room_id]['master_credential'])
+                               room_info=roomInfos[event_room_id])
 
     @__live_danmaku.on("TIMEOUT")
     async def timeout():
         event_room_id = __live_danmaku.room_display_id
-        reload_room_config(update_room_id=event_room_id, room_config=roomConfigs[event_room_id])
+        reload_room_info(update_room_id=event_room_id, room_info=roomInfos[event_room_id])
 
     @__live_danmaku.on("ALL")
     async def any_event(event):
@@ -100,21 +94,19 @@ def bind(live_danmaku: LiveDanmaku):
             await handle_dm_interaction(event=event,
                                         database=mydb,
                                         master_config=masterConfig,
-                                        live_room=roomConfigs[event_room_id]['live_room'],
-                                        room_config=roomConfigs[event_room_id]['room_config'])
+                                        room_info=roomInfos[event_room_id])
         elif event['type'] == 'SUPER_CHAT_MESSAGE':
             await handle_super_chat_message(event=event,
                                             database=mydb,
                                             master_config=masterConfig,
-                                            live_room=roomConfigs[event_room_id]['live_room'],
-                                            room_config=roomConfigs[event_room_id]['room_config'])
+                                            room_info=roomInfos[event_room_id])
         if event['type'] not in event_types:
             print(event)
             event_types.add(event['type'])
 
 
 for room_id in ROOM_IDS:
-    bind(roomConfigs[room_id]['live_danmaku'])
+    bind(roomInfos[room_id]['live_danmaku'])
 
 if __name__ == "__main__":
-    sync(asyncio.gather(*[roomConfigs[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS]))
+    sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS]))

@@ -9,7 +9,7 @@ from Utils.Uid2Username import uid2username
 from web.UpdatePage import update_page
 
 
-async def handle_preparing(event, database, master_config, live_room, room_config, credential):
+async def handle_preparing(event, database, master_config, room_info):
     room_id = event['room_display_id']
     # 记录下播时间
     sql = "UPDATE liveTime SET end = %s WHERE room_id = %s AND end IS NULL"
@@ -25,34 +25,34 @@ async def handle_preparing(event, database, master_config, live_room, room_confi
         # 寄出邮件
         if email_text:
             tg.create_task(
-                send_mail_async(sender=master_config["username"], to=room_config["listener_email"],
-                                subject=f"{room_config['nickname']}于{start_time}路灯",
+                send_mail_async(sender=master_config["username"], to=room_info['room_config']["listener_email"],
+                                subject=f"{room_info['room_config']['nickname']}于{start_time}路灯",
                                 text=email_text, mime_text=f"{event}"))
         else:
             tg.create_task(
-                send_mail_async(sender=master_config["username"], to=room_config["listener_email"],
-                                subject=f"{room_config['nickname']}于{start_time}路灯",
+                send_mail_async(sender=master_config["username"], to=room_info['room_config']["listener_email"],
+                                subject=f"{room_info['room_config']['nickname']}于{start_time}路灯",
                                 text="本期无路灯", mime_text=f"{event}"))
 
-        if room_config["feature_flags"]["checkin"]:
-            if not room_config['state']['pre-checkin']:
+        if room_info['room_config']["feature_flags"]["checkin"]:
+            if not room_info['state']['pre-checkin']:
                 # 统计直播间发言人
                 await record_checkin(start_time=start_time,
                                      end_time=end_time,
-                                     master=room_config['master'],
+                                     master=room_info['room_config']['master'],
                                      room_id=room_id,
-                                     checkin_days=room_config['checkin_days'],
+                                     checkin_days=room_info['room_config']['checkin_days'],
                                      database=database)
-                top_uid_count = await get_top_k_checkin(master_uid=credential.dedeuserid,
+                top_uid_count = await get_top_k_checkin(master_uid=room_info['master_credential'].dedeuserid,
                                                         room_id=room_id, database=database, top_k=10)
                 top_uid_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
                 tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",
-                                           checkin_days=room_config['checkin_days'],
+                                           checkin_days=room_info['room_config']['checkin_days'],
                                            content=top_uid_username_count))
             else:
-                room_config['state']['pre-checkin'] = False
+                room_info['state']['pre-checkin'] = False
 
-        if room_config["feature_flags"]["replay_comment"]:
+        if room_info['room_config']["feature_flags"]["replay_comment"]:
             # 记录路灯跳转
             sql = "UPDATE liveTime SET summary = %s WHERE room_id = %s AND end IS NOT NULL AND summary IS NULL"
             if jump_text:
