@@ -8,7 +8,7 @@ import aiosmtplib
 path = os.getcwd()
 
 
-async def send_mail_async(sender: str, to: list[str], subject: str, text: str, mime_text: str, image=None,
+async def send_mail_async(sender: str, to: list[str], subject: str, text: str, mime_text=None, image=None,
                           text_type='plain'):
     msg = MIMEMultipart()
     msg['Subject'] = subject
