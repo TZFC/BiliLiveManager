@@ -43,7 +43,7 @@ async def handle_preparing(event, database, master_config, room_info):
                                      room_id=room_id,
                                      checkin_days=room_info['room_config']['checkin_days'],
                                      database=database)
-                top_uid_count = await get_top_k_checkin(master_uid=room_info['credential'].dedeuserid,
+                top_uid_count = await get_top_k_checkin(master_uid=room_info['master_credential'].dedeuserid,
                                                         room_id=room_id, database=database, top_k=10)
                 top_uid_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
                 tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",

@@ -20,7 +20,7 @@ async def handle_danmu_msg(event, database, master_config, room_info):
 
     async with (asyncio.TaskGroup() as tg):
         # 主播及master指令
-        if received_uid in {int(room_info['credential'].dedeuserid), streamer_uid}:
+        if received_uid in {int(room_info['master_credential'].dedeuserid), streamer_uid}:
             if "checkin" in text:
                 info = await room_info.get_room_info()
                 live_status = info['room_info']['live_status']
@@ -39,7 +39,7 @@ async def handle_danmu_msg(event, database, master_config, room_info):
                                          room_id=room_id,
                                          checkin_days=room_info['room_config']['checkin_days'],
                                          database=database)
-                    top_uid_count = await get_top_k_checkin(master_uid=room_info['credential'].dedeuserid,
+                    top_uid_count = await get_top_k_checkin(master_uid=room_info['master_credential'].dedeuserid,
                                                             room_id=room_id, database=database, top_k=10)
                     top_uid_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
                     tg.create_task(send_report_checkin(live_room=room_info['live_room'],
