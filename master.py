@@ -1,6 +1,6 @@
 import asyncio
 import os
-from json import load, loads
+from json import load
 
 from bilibili_api import sync
 from bilibili_api.live import LiveDanmaku
@@ -27,6 +27,7 @@ roomConfigs
         - 'master_credential': <>
         - 'live_danmaku': <>
         - 'live_room': <>
+        - ‘state’: <>
 '''
 roomConfigs = {}
 for room_id in ROOM_IDS:
@@ -74,7 +75,8 @@ def bind(live_danmaku: LiveDanmaku):
                                database=mydb,
                                master_config=masterConfig,
                                live_room=roomConfigs[event_room_id]['live_room'],
-                               room_config=roomConfigs[event_room_id]['room_config'])
+                               room_config=roomConfigs[event_room_id]['room_config'],
+                               credential=roomConfigs[event_room_id]['master_credential'])
 
     @__live_danmaku.on("PREPARING")
     async def live_end(event):
@@ -83,7 +85,8 @@ def bind(live_danmaku: LiveDanmaku):
                                database=mydb,
                                master_config=masterConfig,
                                live_room=roomConfigs[event_room_id]['live_room'],
-                               room_config=roomConfigs[event_room_id]['room_config'])
+                               room_config=roomConfigs[event_room_id]['room_config'],
+                               credential=roomConfigs[event_room_id]['master_credential'])
 
     @__live_danmaku.on("TIMEOUT")
     async def timeout():

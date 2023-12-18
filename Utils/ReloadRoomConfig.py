@@ -17,3 +17,5 @@ def reload_room_config(update_room_id: int, room_config: dict):
     room_config['master_credential'] = update_credential
     room_config['live_danmaku'] = LiveDanmaku(update_room_id, credential=update_credential)
     room_config['live_room'] = LiveRoom(update_room_id, credential=update_credential)
+    if 'state' not in room_config:
+        room_config['state'] = {'pre-checkin': False}
