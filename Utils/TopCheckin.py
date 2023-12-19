@@ -8,6 +8,7 @@ async def get_top_k_checkin(master_uid: int, room_id: int, database, top_k: int)
         result = cursor.fetchall()
     return result
 
+
 async def get_top_checkin(master_uid: int, room_id: int, database) -> list:
     with database.cursor() as cursor:
         sql = ("SELECT uid, count FROM checkin "
