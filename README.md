@@ -32,7 +32,7 @@ pip install -r requirements.txt
 
 ## 2. Create mysql database
 
-Remember to allow access from your EC2 instance when setting up database
+Remember to allow access from your EC2 instance when setting up AWS RDS mysql database
 
 Fill database access information into mysql.json
 
