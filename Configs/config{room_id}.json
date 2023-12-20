@@ -21,7 +21,7 @@
     "辣条",
     "粉丝团灯牌"
   ],
-  "repo": "https://space.bilibili.com/654321/channel/seriesdetail?sid=123456&ctype=0",
+  "repo": "123456",
   "checkin_days": 30,
   "master": "tzfc",
   "feature_flags": {
