@@ -24,12 +24,14 @@ for room_id in ROOM_IDS:
     roomInfos[room_id] = {}
     reload_room_info(update_room_id=room_id, room_info=roomInfos[room_id])
 
+MAX_NON_REPLAY = 10  # 每小时内最多上传 10 个不是录播的视频
 with mydb.cursor() as cursor:
     for room_id in ROOM_IDS:
         if not roomInfos[room_id]['room_config']["feature_flags"]["replay_comment"]:
             continue
         # get available summaries
-        sql = "SELECT start, summary FROM liveTime WHERE room_id=%s AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start"
+        sql = ("SELECT start, summary FROM liveTime WHERE room_id=%s "
+               "AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start")
         val = (room_id,)
         cursor.execute(sql, val)
         summaries = cursor.fetchall()
@@ -39,12 +41,13 @@ with mydb.cursor() as cursor:
         # get all videos details in repo
         repo = roomInfos[room_id]['room_config']["repo"]
         split_repo = repo.split("/")
-        if split_repo[-1] == "video":
-            uid = split_repo[-2]
+        if len(split_repo) == 1:  # 若不含/，便是一个uid
+            uid = int(repo)
             repo_owner = User(uid=uid, credential=roomInfos[room_id]['master_credential'])
-            videos = sync(repo_owner.get_videos())
-            details = videos['list']['vlist']
-        else:
+            videos = sync(repo_owner.get_media_list(ps=len(summaries) + MAX_NON_REPLAY))
+            details = videos['media_list']
+            AID_KEY='id'
+        else:  # 若含/，便是一个合集 "https://space.bilibili.com/654321/channel/seriesdetail?sid=123456&ctype=0",
             uid = split_repo[-3]
             channel_series_type = ChannelSeriesType.SERIES if "series" in split_repo[-1] else ChannelSeriesType.SEASON
             series_id = eval(re.search(r"sid=\d*", split_repo[-1]).group()[4:])
@@ -60,13 +63,14 @@ with mydb.cursor() as cursor:
             else:
                 videos = sync(channel.get_videos(ChannelOrder.CHANGE))
             details = videos['archives']
+            AID_KEY = 'aid'
 
         # check if there is new video
         sql = "SELECT aid FROM postProgress WHERE room_id=%s"
         val = (room_id,)
         cursor.execute(sql, val)
         prev_aid = cursor.fetchall()[0][0]
-        if prev_aid == details[0]['aid']:
+        if prev_aid == details[0][AID_KEY]:
             continue
 
         # match each available summary with videos
@@ -91,14 +95,14 @@ with mydb.cursor() as cursor:
                 if hour is None:
                     if start.year == video_date.year and start.month == video_date.month and start.day == video_date.day:
                         if summary != "N/A":
-                            sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
+                            sync(send_comment(text=summary, oid=details[i][AID_KEY], type_=CommentResourceType.VIDEO,
                                               credential=roomInfos[room_id]['master_credential']))
                         success.append((start, summary))
                         break
                 else:
                     if abs(start - video_date) < timedelta(hours=1):
                         if summary != "N/A":
-                            sync(send_comment(text=summary, oid=details[i]['aid'], type_=CommentResourceType.VIDEO,
+                            sync(send_comment(text=summary, oid=details[i][AID_KEY], type_=CommentResourceType.VIDEO,
                                               credential=roomInfos[room_id]['master_credential']))
                         success.append((start, summary))
                         break
@@ -112,6 +116,6 @@ with mydb.cursor() as cursor:
 
         # update postProgress
         sql = "UPDATE postProgress SET aid=%s WHERE room_id=%s"
-        val = (details[0]['aid'], room_id)
+        val = (details[0][AID_KEY], room_id)
         cursor.execute(sql, val)
         mydb.commit()
