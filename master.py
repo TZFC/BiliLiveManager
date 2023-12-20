@@ -44,7 +44,11 @@ event_types = {
     'MESSAGEBOX_USER_MEDAL_CHANGE', 'LITTLE_MESSAGE_BOX', 'GUARD_HONOR_THOUSAND', 'SYS_MSG', 'ONLINE_RANK_TOP3',
     'USER_PANEL_RED_ALARM', 'SUPER_CHAT_MESSAGE', 'PK_BATTLE_PRE_NEW', 'PK_BATTLE_PRE', 'PK_BATTLE_START_NEW',
     'PK_BATTLE_START', 'PK_BATTLE_PROCESS_NEW', 'PK_BATTLE_PROCESS', 'PK_BATTLE_FINAL_PROCESS', 'PK_BATTLE_END',
-    'PK_BATTLE_SETTLE_USER', 'PK_BATTLE_SETTLE_V2', 'PK_BATTLE_SETTLE'}
+    'PK_BATTLE_SETTLE_USER', 'PK_BATTLE_SETTLE_V2', 'PK_BATTLE_SETTLE', 'LIVE_OPEN_PLATFORM_GAME',
+    'LIVE_INTERACT_GAME_STATE_CHANGE', 'LIKE_INFO_V3_NOTICE', 'SUPER_CHAT_MESSAGE_JPN', 'LIVE_PANEL_CHANGE_CONTENT',
+    'GIFT_PANEL_PLAN', 'GIFT_STAR_PROCESS', 'ROOM_SKIN_MSG', 'USER_INFO_UPDATE', 'CUSTOM_NOTICE_CARD',
+    'GIFT_STAR_PROCESS', 'WIDGET_GIFT_STAR_PROCESS', 'ROOM_CHANGE', 'SHOPPING_CART_SHOW', 'RECOMMEND_CARD',
+    'GOTO_BUY_FLOW'}
 
 
 def bind(live_danmaku: LiveDanmaku):
@@ -95,7 +99,7 @@ def bind(live_danmaku: LiveDanmaku):
                                         database=mydb,
                                         master_config=masterConfig,
                                         room_info=roomInfos[event_room_id])
-        elif event['type'] == 'SUPER_CHAT_MESSAGE':
+        elif event['type'] in {'SUPER_CHAT_MESSAGE', 'SUPER_CHAT_MESSAGE_JPN'}:
             await handle_super_chat_message(event=event,
                                             database=mydb,
                                             master_config=masterConfig,
