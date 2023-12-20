@@ -35,6 +35,7 @@ pip install -r requirements.txt
 Remember to allow access from your EC2 instance when setting up database
 
 Fill database access information into mysql.json
+
 ```
 vim Configs/mysql.json
 ```
@@ -51,12 +52,12 @@ CREATE TABLE checkin (uid INT, room_id INT, name VARCHAR(255), slot_0 INT, slot_
 CREATE TABLE blacklist (uid INT)
 ```
 
-
 ## 3. Log into bilibili.com in **PRIVATE** browser window
 
 Get credentials following [this guide](https://nemo2011.github.io/bilibili-api/#/get-credential)
 
 Store your credentials in database, give this account a nickname as master
+
 ```
 python
 from json import load
@@ -105,14 +106,14 @@ sudo service apache2 restart
 cd var/www/html
 ```
 
-modify index.html and {room_id}.html according to [web/index.html](https://github.com/TZFC/BiliLiveManager/blob/53e430c98d2f5a1c634a47efe8c0043544fdc287/web/index.html)
+modify index.html and {room_id}.html according
+to [web/index.html](https://github.com/TZFC/BiliLiveManager/blob/53e430c98d2f5a1c634a47efe8c0043544fdc287/web/index.html)
 
 When used in obs/哔哩哔哩直播姬：
 
 'browser source' -> <EC2_public_ip>/{room_id}.html -> banner_style.css
 
 ## 9. set cron jobs
-
 
 ```
 55 * * * * cd /home/ubuntu/BiliLiveManager && py311/bin/python popularTicketRemind.py 2> popout.txt &

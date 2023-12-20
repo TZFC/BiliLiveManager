@@ -4,7 +4,7 @@ from datetime import datetime
 from Utils.Checkin import record_checkin
 from Utils.EmailSender import send_mail_async
 from Utils.Summarizer import summarize
-from Utils.TopCheckin import get_top_k_checkin, get_top_checkin
+from Utils.TopCheckin import get_top_checkin
 from web.UpdatePage import update_page
 
 
