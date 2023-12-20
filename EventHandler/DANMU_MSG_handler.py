@@ -7,7 +7,6 @@ from Utils.EVENT_IDX import *
 from Utils.RecordDanmaku import record_danmaku
 from Utils.SendReportCheckin import send_report_checkin
 from Utils.TopCheckin import get_top_k_checkin, get_top_checkin
-from Utils.Uid2Username import uid2username
 from web.UpdatePage import update_page
 
 
@@ -39,14 +38,13 @@ async def handle_danmu_msg(event, database, master_config, room_info):
                                          room_id=room_id,
                                          checkin_days=room_info['room_config']['checkin_days'],
                                          database=database)
-                    top_uid_count = await get_top_checkin(master_uid=room_info['master_credential'].dedeuserid,
-                                                            room_id=room_id, database=database)
-                    top_uid_username_count = await asyncio.gather(*map(uid2username, top_uid_count))
+                    top_uid_name_count = await get_top_checkin(master_uid=room_info['master_credential'].dedeuserid,
+                                                               room_id=room_id, database=database)
                     tg.create_task(send_report_checkin(live_room=room_info['live_room'],
-                                                       top_uid_username_count=top_uid_username_count))
+                                                       top_uid_username_count=top_uid_name_count))
                     tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",
                                                checkin_days=room_info['room_config']['checkin_days'],
-                                               content=top_uid_username_count))
+                                               content=top_uid_name_count))
                     room_info['state']['pre-checkin'] = True
         # 封禁关键词
         if room_info['room_config']["feature_flags"]["unban"]:
