@@ -7,7 +7,7 @@ from json import load
 from bilibili_api import sync
 from bilibili_api.channel_series import ChannelSeries, ChannelSeriesType, ChannelOrder
 from bilibili_api.comment import send_comment, CommentResourceType
-from bilibili_api.user import User
+from bilibili_api.user import User, MedialistOrder
 from mysql.connector import connect
 
 from Utils.ReloadRoomConfig import reload_room_info
@@ -31,7 +31,7 @@ with mydb.cursor() as cursor:
             continue
         # get available summaries
         sql = ("SELECT start, summary FROM liveTime WHERE room_id=%s "
-               "AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start")
+               "AND end IS NOT NULL AND summary IS NOT NULL ORDER BY start DESC")
         val = (room_id,)
         cursor.execute(sql, val)
         summaries = cursor.fetchall()
@@ -44,9 +44,10 @@ with mydb.cursor() as cursor:
         if len(split_repo) == 1:  # 若不含/，便是一个uid
             uid = int(repo)
             repo_owner = User(uid=uid, credential=roomInfos[room_id]['master_credential'])
-            videos = sync(repo_owner.get_media_list(ps=len(summaries) + MAX_NON_REPLAY))
+            videos = sync(repo_owner.get_media_list(ps=len(summaries) + MAX_NON_REPLAY, desc=True,
+                                                    sort_field=MedialistOrder.PUBDATE))
             details = videos['media_list']
-            AID_KEY='id'
+            AID_KEY = 'id'
         else:  # 若含/，便是一个合集 "https://space.bilibili.com/654321/channel/seriesdetail?sid=123456&ctype=0",
             uid = split_repo[-3]
             channel_series_type = ChannelSeriesType.SERIES if "series" in split_repo[-1] else ChannelSeriesType.SEASON

@@ -6,7 +6,7 @@ from Utils.Checkin import record_checkin
 from Utils.EVENT_IDX import *
 from Utils.RecordDanmaku import record_danmaku
 from Utils.SendReportCheckin import send_report_checkin
-from Utils.TopCheckin import get_top_k_checkin, get_top_checkin
+from Utils.TopCheckin import get_top_checkin
 from web.UpdatePage import update_page
 
 
