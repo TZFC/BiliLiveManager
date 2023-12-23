@@ -5,7 +5,11 @@ from bilibili_api.live import LiveRoom
 
 
 async def ban_with_timeout(live_room: LiveRoom, uid: int, timeout: int, database):
-    await live_room.ban_user(uid)
+    try:
+        await live_room.ban_user(uid)
+    except Exception:
+        print(f"ban failed for {uid}")
+        print(Exception)
     await asyncio.sleep(timeout)
     try:
         await live_room.unban_user(uid)
