@@ -94,7 +94,7 @@ Note: Feature flag 0 is OFF ; 1 is ON
 ## 7. Run master.py
 
 ```
-python master.py 1>output.txt 2>error.txt &
+python master.py 1>out 2>error &
 ```
 
 ## 8. Install and run apache server
@@ -116,10 +116,9 @@ When used in obs/哔哩哔哩直播姬：
 ## 9. set cron jobs
 
 ```
-55 * * * * cd /home/ubuntu/BiliLiveManager && py311/bin/python popularTicketRemind.py 2> popout.txt &
-5 * * * * cd /home/ubuntu/BiliLiveManager && py311/bin/python refreshCredentials.py 2> refout.txt &
-10 * * * * cd /home/ubuntu/BiliLiveManager && py311/bin/python postReplayComment.py 2> postout.txt &
-@reboot cd /home/ubuntu/BiliLiveManager && py311/bin/python master.py 1>out.txt 2>newerror.txt &
+55 * * * * cd /home/ubuntu/BiliLiveManager && py311/bin/python popularTicketRemind.py 2> popout &
+10 * * * * cd /home/ubuntu/BiliLiveManager && py311/bin/python postReplayComment.py 2> postout &
+@reboot cd /home/ubuntu/BiliLiveManager && py311/bin/python master.py 1>out 2>error &
 @reboot sudo /etc/init.d/apache2 restart
 ```
 
