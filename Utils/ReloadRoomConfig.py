@@ -8,7 +8,7 @@ from Utils.CredentialGetter import get_credential
 path = os.getcwd()
 
 
-def reload_room_info(update_room_id: int, room_info: dict):
+def load_room_info(update_room_id: int, room_info: dict):
     # 重载直播间设置, 刷新Credential
     with open(os.path.join(path, f"Configs/config{update_room_id}.json")) as update_roomConfigFile:
         update_config = load(update_roomConfigFile)
@@ -19,9 +19,6 @@ def reload_room_info(update_room_id: int, room_info: dict):
         room_info['live_danmaku'].credential = update_credential
     else:
         room_info['live_danmaku'] = LiveDanmaku(update_room_id, credential=update_credential)
-    if 'live_room' in room_info:
-        room_info['live_room'].credential = update_credential
-    else:
-        room_info['live_room'] = LiveRoom(update_room_id, credential=update_credential)
+    room_info['live_room'] = LiveRoom(update_room_id, credential=update_credential)
     if 'state' not in room_info:
         room_info['state'] = {'pre-checkin': False}

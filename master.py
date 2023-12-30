@@ -3,36 +3,28 @@ import os
 from json import load
 
 from bilibili_api import sync
-from bilibili_api.live import LiveDanmaku
-from mysql.connector import connect
+from bilibili_api.live import LiveDanmaku, LiveRoom
+from mysql.connector import connect, MySQLConnection
 
 from EventHandler.DANMU_MSG_handler import handle_danmu_msg
 from EventHandler.LIVE_Handler import handle_live
 from EventHandler.OTHER_handler import handle_dm_interaction, handle_super_chat_message
 from EventHandler.PREPARING_handler import handle_preparing
 from EventHandler.SEND_GIFT_handler import handle_send_gift
-from Utils.ReloadRoomConfig import reload_room_info
+from Utils.CredentialGetter import get_credential
 
-path = os.getcwd()
-with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
-    masterConfig = load(masterConfigFile)
-with open(os.path.join(path, "Configs/mysql.json")) as mysqlFile:
-    mydb = connect(**load(mysqlFile))
 
-ROOM_IDS = masterConfig["room_ids"]
-'''
-roomInfos
-    - <room_id>:
-        - 'room_config': <>
-        - 'master_credential': <>
-        - 'live_danmaku': <>
-        - 'live_room': <>
-        - ‘state’: <>
-'''
-roomInfos = {}
-for room_id in ROOM_IDS:
-    roomInfos[room_id] = {}
-    reload_room_info(update_room_id=room_id, room_info=roomInfos[room_id])
+def load_config(room_infos, room_ids):
+    for __room_id in room_ids:
+        with open(os.path.join(path, f"Configs/config{__room_id}.json")) as __roomConfigFile:
+            __room_config = load(__roomConfigFile)
+        __credential = get_credential(__room_config["master"])
+        room_infos[__room_id] = {'room_config': __room_config,
+                                 'master_credential': __credential,
+                                 'live_danmaku': LiveDanmaku(__room_id, credential=__credential),
+                                 'live_room': LiveRoom(__room_id, credential=__credential),
+                                 'state': {'pre-checkin': False}}
+
 
 event_types = {
     'LIVE', 'SEND_GIFT', 'DANMU_MSG', 'PREPARING', 'VERIFICATION_SUCCESSFUL', 'VIEW', 'ONLINE_RANK_COUNT',
@@ -51,66 +43,101 @@ event_types = {
     'GOTO_BUY_FLOW'}
 
 
-def bind(live_danmaku: LiveDanmaku):
+def bind(live_danmaku: LiveDanmaku, master_config):
     __live_danmaku = live_danmaku
 
     @__live_danmaku.on("LIVE")
     async def live_start(event):
-        event_room_id = event['room_display_id']
+        __event_room_id = event['room_display_id']
         await handle_live(event=event,
                           database=mydb,
-                          master_config=masterConfig,
-                          room_info=roomInfos[event_room_id])
+                          master_config=master_config,
+                          room_info=roomInfos[__event_room_id])
 
     @__live_danmaku.on("SEND_GIFT")
     async def gift(event):
-        event_room_id = event['room_display_id']
+        __event_room_id = event['room_display_id']
         await handle_send_gift(event=event,
                                database=mydb,
-                               master_config=masterConfig,
-                               room_info=roomInfos[event_room_id])
+                               master_config=master_config,
+                               room_info=roomInfos[__event_room_id])
 
     @__live_danmaku.on("DANMU_MSG")
     async def recv(event):
-        event_room_id = event['room_display_id']
+        __event_room_id = event['room_display_id']
         await handle_danmu_msg(event=event,
                                database=mydb,
-                               master_config=masterConfig,
-                               room_info=roomInfos[event_room_id])
+                               master_config=master_config,
+                               room_info=roomInfos[__event_room_id])
 
     @__live_danmaku.on("PREPARING")
     async def live_end(event):
-        event_room_id = event['room_display_id']
+        __event_room_id = event['room_display_id']
         await handle_preparing(event=event,
                                database=mydb,
-                               master_config=masterConfig,
-                               room_info=roomInfos[event_room_id])
-
-    @__live_danmaku.on("TIMEOUT")
-    async def timeout():
-        event_room_id = __live_danmaku.room_display_id
-        reload_room_info(update_room_id=event_room_id, room_info=roomInfos[event_room_id])
+                               master_config=master_config,
+                               room_info=roomInfos[__event_room_id])
 
     @__live_danmaku.on("ALL")
     async def any_event(event):
-        event_room_id = event['room_display_id']
         if event['type'] == 'DM_INTERACTION':
+            __event_room_id = event['room_display_id']
             await handle_dm_interaction(event=event,
                                         database=mydb,
-                                        master_config=masterConfig,
-                                        room_info=roomInfos[event_room_id])
+                                        master_config=master_config,
+                                        room_info=roomInfos[__event_room_id])
         elif event['type'] in {'SUPER_CHAT_MESSAGE', 'SUPER_CHAT_MESSAGE_JPN'}:
+            __event_room_id = event['room_display_id']
             await handle_super_chat_message(event=event,
                                             database=mydb,
-                                            master_config=masterConfig,
-                                            room_info=roomInfos[event_room_id])
+                                            master_config=master_config,
+                                            room_info=roomInfos[__event_room_id])
         if event['type'] not in event_types:
             print(event)
             event_types.add(event['type'])
 
 
-for room_id in ROOM_IDS:
-    bind(roomInfos[room_id]['live_danmaku'])
+async def refresh_credentials(master_config: dict, room_infos: dict, database: MySQLConnection):
+    await asyncio.sleep(30 * 60)
+    for __master in master_config["masters"]:
+        __credential = get_credential(__master)
+        if await __credential.check_refresh():
+            await __credential.refresh()
+            __sql = ("UPDATE credentials SET sessdata = %s, bili_jct = %s, buvid3 = %s, ac_time_value = %s "
+                     "WHERE master = %s")
+            __val = (
+                __credential.sessdata, __credential.bili_jct, __credential.buvid3, __credential.ac_time_value, __master)
+            with database.cursor() as cursor:
+                cursor.execute(__sql, __val)
+                database.commit()
+        for __room_id, __room_info in room_infos.items():
+            if __room_info["room_config"]["master"] != __master:
+                continue
+            __room_info['live_room'] = LiveRoom(__room_id, credential=__credential)
+            __room_info['live_danmaku'].credential = __credential
 
+
+# Main entry point
+path = os.getcwd()
+with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
+    masterConfig = load(masterConfigFile)
+with open(os.path.join(path, "Configs/mysql.json")) as mysqlFile:
+    mydb = connect(**load(mysqlFile))
+
+ROOM_IDS = masterConfig["room_ids"]
+'''
+roomInfos
+    - <room_id>:
+        - 'room_config': <>
+        - 'master_credential': <>
+        - 'live_danmaku': <>
+        - 'live_room': <>
+        - 'state': <>
+'''
+roomInfos = {}
+load_config(room_infos=roomInfos, room_ids=ROOM_IDS)
+for room_id in ROOM_IDS:
+    bind(live_danmaku=roomInfos[room_id]['live_danmaku'], master_config=masterConfig)
 if __name__ == "__main__":
-    sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS]))
+    sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS],
+                        refresh_credentials(master_config=masterConfig, room_infos=roomInfos, database=mydb)))

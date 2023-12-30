@@ -5,7 +5,7 @@ from json import load
 from bilibili_api import sync, Danmaku
 
 from Utils.EVENT_IDX import LIVE_STATUS_STREAMING
-from Utils.ReloadRoomConfig import reload_room_info
+from Utils.ReloadRoomConfig import load_room_info
 
 path = os.getcwd()
 with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
@@ -15,7 +15,7 @@ ROOM_IDS = masterConfig["room_ids"]
 roomInfos = {}
 for room_id in ROOM_IDS:
     roomInfos[room_id] = {}
-    reload_room_info(update_room_id=room_id, room_info=roomInfos[room_id])
+    load_room_info(update_room_id=room_id, room_info=roomInfos[room_id])
     if not roomInfos[room_id]['room_config']["feature_flags"]["renqi_remind"]:
         continue
     # 查询是否正在直播
