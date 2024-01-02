@@ -18,7 +18,7 @@ async def handle_danmu_msg(event, database, master_config, room_info):
     streamer_uid = await room_info['live_room']._LiveRoom__get_ruid()
     async with asyncio.TaskGroup() as tg:
         # 主播及master指令
-        if received_uid in {int(room_info['master_credential'].dedeuserid), streamer_uid}:
+        if received_uid in {room_info['state']['uid'], streamer_uid}:
             if "checkin" in text:
                 info = await room_info['live_room'].get_room_info()
                 live_status = info['room_info']['live_status']

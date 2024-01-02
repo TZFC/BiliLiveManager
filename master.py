@@ -23,7 +23,7 @@ def load_config(room_infos, room_ids):
                                  'master_credential': __credential,
                                  'live_danmaku': LiveDanmaku(__room_id, credential=__credential),
                                  'live_room': LiveRoom(__room_id, credential=__credential),
-                                 'state': {'pre-checkin': False}}
+                                 'state': {'pre-checkin': False, 'uid': int(__credential.dedeuserid)}}
 
 
 event_types = {
