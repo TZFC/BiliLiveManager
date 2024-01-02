@@ -23,7 +23,7 @@ def load_config(room_infos, room_ids):
                                  'master_credential': __credential,
                                  'live_danmaku': LiveDanmaku(__room_id, credential=__credential),
                                  'live_room': LiveRoom(__room_id, credential=__credential),
-                                 'state': {'pre-checkin': False}}
+                                 'state': {'pre-checkin': False, 'uid': int(__credential.dedeuserid)}}
 
 
 event_types = {
@@ -98,7 +98,6 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
 
 async def refresh_credentials(master_config: dict, room_infos: dict, database: MySQLConnection):
-    await asyncio.sleep(30 * 60)
     for __master in master_config["masters"]:
         __credential = get_credential(__master)
         if await __credential.check_refresh():
@@ -115,6 +114,7 @@ async def refresh_credentials(master_config: dict, room_infos: dict, database: M
                 continue
             __room_info['live_room'] = LiveRoom(__room_id, credential=__credential)
             __room_info['live_danmaku'].credential = __credential
+    await asyncio.sleep(30 * 60)
 
 
 # Main entry point

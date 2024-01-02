@@ -23,8 +23,9 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         head = slots.index(1)
         next_head = head + 1 if head != checkin_days - 1 else 0
 
-        sql = (f"SELECT DISTINCT uid, name FROM danmu "
-               f"WHERE room_id = %s AND time BETWEEN %s AND %s AND type = {TEXT_TYPE} ")
+        sql = (f"SELECT uid, name FROM danmu "
+               f"WHERE room_id = %s AND time BETWEEN %s AND %s AND type = {TEXT_TYPE} "
+               f"GROUP BY uid HAVING count(text) > 1")
         val = (room_id, start_time, end_time)
         cursor.execute(sql, val)
         unique_uid_name = cursor.fetchall()
