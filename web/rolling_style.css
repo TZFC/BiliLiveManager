@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+HK:wght@700&family=Noto+Serif+JP:wght@700&family=Noto+Serif+SC:wght@700&family=Noto+Serif+TC:wght@700&display=swap');
 @keyframes scrollup{
     from{
-        transform: translateY(calc(100% + 100vh));
+        transform: translateY(100vh);
     }
     to{
-        transform: translateY(calc(-100% - 20vh));
+        transform: translateY(calc(-100% - 100vh));
     }
 }
 html,body{
@@ -20,7 +20,7 @@ body::before{
 }
 body{
     color:#fff; /* 正文颜色 */
-    animation:scrollup 10s linear infinite; /* 滚动时间 */
+    animation:scrollup 120s linear infinite; /* 滚动时间 */
     background-color:transparent;
     position:relative;
     width:fit-content;
@@ -37,7 +37,7 @@ body{
 p{
     margin: 50px 0px;  /* 段落间距 竖向 横向 */
     text-align: center;
-    display: none;
+    display: block; /* 默认全部显示 */
 }
 #_1 ._30 .top::before{  /* 排名第一且30场全勤头衔 */
     content:"老公 ";
@@ -56,6 +56,6 @@ p{
 #_1{
     color:#76ea8f;/* 当前第一名颜色（会被全勤覆写） */
 }
-#_1, #_2, #_3{ /* 前三名 */
-    display: block; /* 显示 */
+._0, ._1, ._2 { /* 打卡 0场 与 1场 与 2场*/
+    display: none; /* 不显示 */
 }
