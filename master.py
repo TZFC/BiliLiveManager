@@ -97,6 +97,11 @@ def bind(live_danmaku: LiveDanmaku, master_config):
             event_types.add(event['type'])
 
 
+async def refresh_credentials_loop(master_config: dict, room_infos: dict, database: MySQLConnection):
+    while True:
+        await refresh_credentials(master_config, room_infos, database)
+
+
 async def refresh_credentials(master_config: dict, room_infos: dict, database: MySQLConnection):
     for __master in master_config["masters"]:
         __credential = get_credential(__master)
@@ -140,4 +145,4 @@ for room_id in ROOM_IDS:
     bind(live_danmaku=roomInfos[room_id]['live_danmaku'], master_config=masterConfig)
 if __name__ == "__main__":
     sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS],
-                        refresh_credentials(master_config=masterConfig, room_infos=roomInfos, database=mydb)))
+                        refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)))
