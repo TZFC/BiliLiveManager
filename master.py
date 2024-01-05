@@ -44,10 +44,12 @@ event_types = {
 
 
 def bind(live_danmaku: LiveDanmaku, master_config):
+    print(f"binding {live_danmaku.room_display_id}")
     __live_danmaku = live_danmaku
 
     @__live_danmaku.on("LIVE")
     async def live_start(event):
+        print(f"{live_danmaku.room_display_id} is live")
         __event_room_id = event['room_display_id']
         await handle_live(event=event,
                           database=mydb,
@@ -153,4 +155,5 @@ for room_id in ROOM_IDS:
     bind(live_danmaku=roomInfos[room_id]['live_danmaku'], master_config=masterConfig)
 if __name__ == "__main__":
     sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS],
-                        refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)))
+                        #refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)
+                        ))
