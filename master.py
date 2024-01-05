@@ -49,7 +49,7 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
     @__live_danmaku.on("LIVE")
     async def live_start(event):
-        print(f"{live_danmaku.room_display_id} is live")
+        print(f"{event}")
         __event_room_id = event['room_display_id']
         await handle_live(event=event,
                           database=mydb,
@@ -66,6 +66,7 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
     @__live_danmaku.on("DANMU_MSG")
     async def recv(event):
+        print(f"{event}")
         __event_room_id = event['room_display_id']
         await handle_danmu_msg(event=event,
                                database=mydb,
@@ -74,6 +75,7 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
     @__live_danmaku.on("PREPARING")
     async def live_end(event):
+        print(f"{event}")
         __event_room_id = event['room_display_id']
         await handle_preparing(event=event,
                                database=mydb,
@@ -151,9 +153,8 @@ roomInfos
 roomInfos = {}
 load_config(room_infos=roomInfos, room_ids=ROOM_IDS)
 for room_id in ROOM_IDS:
-    print(f"binding {room_id}")
     bind(live_danmaku=roomInfos[room_id]['live_danmaku'], master_config=masterConfig)
 if __name__ == "__main__":
     sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS],
-                        #refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)
+                        refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)
                         ))
