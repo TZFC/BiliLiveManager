@@ -78,6 +78,13 @@ def bind(live_danmaku: LiveDanmaku, master_config):
                                master_config=master_config,
                                room_info=roomInfos[__event_room_id])
 
+    @__live_danmaku.on("DISCONNECT")
+    async def disconnect(event):
+        __event_room_id = event['room_display_id']
+        await refresh_credentials(masters=[roomInfos[__event_room_id]['room_config']['master'],],
+                                  room_infos=roomInfos,
+                                  database=mydb)
+
     @__live_danmaku.on("ALL")
     async def any_event(event):
         if event['type'] == 'DM_INTERACTION':
@@ -99,11 +106,12 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
 async def refresh_credentials_loop(master_config: dict, room_infos: dict, database: MySQLConnection):
     while True:
-        await refresh_credentials(master_config, room_infos, database)
+        await refresh_credentials(master_config["masters"], room_infos, database)
+        await asyncio.sleep(30 * 60)
 
 
-async def refresh_credentials(master_config: dict, room_infos: dict, database: MySQLConnection):
-    for __master in master_config["masters"]:
+async def refresh_credentials(masters: list, room_infos: dict, database: MySQLConnection):
+    for __master in masters:
         __credential = get_credential(__master)
         if await __credential.check_refresh():
             await __credential.refresh()
@@ -119,7 +127,6 @@ async def refresh_credentials(master_config: dict, room_infos: dict, database: M
                 continue
             __room_info['live_room'] = LiveRoom(__room_id, credential=__credential)
             __room_info['live_danmaku'].credential = __credential
-    await asyncio.sleep(30 * 60)
 
 
 # Main entry point
@@ -142,6 +149,7 @@ roomInfos
 roomInfos = {}
 load_config(room_infos=roomInfos, room_ids=ROOM_IDS)
 for room_id in ROOM_IDS:
+    print(f"binding {room_id}")
     bind(live_danmaku=roomInfos[room_id]['live_danmaku'], master_config=masterConfig)
 if __name__ == "__main__":
     sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS],
