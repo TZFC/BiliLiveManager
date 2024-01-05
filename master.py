@@ -44,12 +44,10 @@ event_types = {
 
 
 def bind(live_danmaku: LiveDanmaku, master_config):
-    print(f"binding {live_danmaku.room_display_id}")
     __live_danmaku = live_danmaku
 
     @__live_danmaku.on("LIVE")
     async def live_start(event):
-        print(f"{event}")
         __event_room_id = event['room_display_id']
         await handle_live(event=event,
                           database=mydb,
@@ -66,7 +64,6 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
     @__live_danmaku.on("DANMU_MSG")
     async def recv(event):
-        print(f"{event}")
         __event_room_id = event['room_display_id']
         await handle_danmu_msg(event=event,
                                database=mydb,
@@ -75,7 +72,6 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
     @__live_danmaku.on("PREPARING")
     async def live_end(event):
-        print(f"{event}")
         __event_room_id = event['room_display_id']
         await handle_preparing(event=event,
                                database=mydb,
