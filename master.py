@@ -81,7 +81,7 @@ def bind(live_danmaku: LiveDanmaku, master_config):
     @__live_danmaku.on("DISCONNECT")
     async def disconnect(event):
         __event_room_id = event['room_display_id']
-        await refresh_credentials(masters=[roomInfos[__event_room_id]['room_config']['master'],],
+        await refresh_credentials(masters=[roomInfos[__event_room_id]['room_config']['master'], ],
                                   room_infos=roomInfos,
                                   database=mydb)
 
