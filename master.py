@@ -81,7 +81,7 @@ def bind(live_danmaku: LiveDanmaku, master_config):
     @__live_danmaku.on("DISCONNECT")
     async def disconnect(event):
         __event_room_id = event['room_display_id']
-        await refresh_credentials(masters=[roomInfos[__event_room_id]['room_config']['master'],],
+        await refresh_credentials(masters=[roomInfos[__event_room_id]['room_config']['master'], ],
                                   room_infos=roomInfos,
                                   database=mydb)
 
@@ -149,8 +149,8 @@ roomInfos
 roomInfos = {}
 load_config(room_infos=roomInfos, room_ids=ROOM_IDS)
 for room_id in ROOM_IDS:
-    print(f"binding {room_id}")
     bind(live_danmaku=roomInfos[room_id]['live_danmaku'], master_config=masterConfig)
 if __name__ == "__main__":
     sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS],
-                        refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)))
+                        refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)
+                        ))
