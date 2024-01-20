@@ -107,26 +107,26 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 async def refresh_credentials_loop(master_config: dict, room_infos: dict, database: MySQLConnection):
     while True:
         await refresh_credentials(master_config["masters"], room_infos, database)
-        await asyncio.sleep(30 * 60)
+        await asyncio.sleep(6 * 60 * 60)
 
 
 async def refresh_credentials(masters: list, room_infos: dict, database: MySQLConnection):
-    for __master in masters:
-        __credential = get_credential(__master)
-        if await __credential.check_refresh():
-            await __credential.refresh()
-            __sql = ("UPDATE credentials SET sessdata = %s, bili_jct = %s, buvid3 = %s, ac_time_value = %s "
+    for master in masters:
+        credential = get_credential(master)
+        if await credential.check_refresh():
+            await credential.refresh()
+            sql = ("UPDATE credentials SET sessdata = %s, bili_jct = %s, buvid3 = %s, ac_time_value = %s "
                      "WHERE master = %s")
-            __val = (
-                __credential.sessdata, __credential.bili_jct, __credential.buvid3, __credential.ac_time_value, __master)
+            val = (
+                credential.sessdata, credential.bili_jct, credential.buvid3, credential.ac_time_value, master)
             with database.cursor() as cursor:
-                cursor.execute(__sql, __val)
+                cursor.execute(sql, val)
                 database.commit()
-        for __room_id, __room_info in room_infos.items():
-            if __room_info["room_config"]["master"] != __master:
+        for room_id, room_info in room_infos.items():
+            if room_info["room_config"]["master"] != master:
                 continue
-            __room_info['live_room'] = LiveRoom(__room_id, credential=__credential)
-            __room_info['live_danmaku'].credential = __credential
+            room_info['live_room'].credential = credential
+            room_info['live_danmaku'].credential = credential
 
 
 # Main entry point
