@@ -14,16 +14,23 @@ from EventHandler.SEND_GIFT_handler import handle_send_gift
 from Utils.CredentialGetter import get_credential
 
 
-def load_config(room_infos, room_ids):
-    for __room_id in room_ids:
-        with open(os.path.join(path, f"Configs/config{__room_id}.json")) as __roomConfigFile:
-            __room_config = load(__roomConfigFile)
-        __credential = get_credential(__room_config["master"])
-        room_infos[__room_id] = {'room_config': __room_config,
-                                 'master_credential': __credential,
-                                 'live_danmaku': LiveDanmaku(__room_id, credential=__credential),
-                                 'live_room': LiveRoom(__room_id, credential=__credential),
-                                 'state': {'pre-checkin': False, 'uid': int(__credential.dedeuserid)}}
+def load_credential(credential_dict):
+    with open(os.path.join(path, "Configs/masterConfig.json")) as masterConfigFile:
+        masterConfig = load(masterConfigFile)
+    for master in masterConfig['masters']:
+        credential_dict[master] = get_credential(master)
+
+
+def load_config(room_infos, room_ids, credential_dict):
+    for room_id in room_ids:
+        with open(os.path.join(path, f"Configs/config{room_id}.json")) as roomConfigFile:
+            room_config = load(roomConfigFile)
+        room_infos[room_id] = {'room_config': room_config,
+                               'master_credential': credential_dict[room_config["master"]],
+                               'live_danmaku': LiveDanmaku(room_id, credential=credential_dict[room_config["master"]]),
+                               'live_room': LiveRoom(room_id, credential=credential_dict[room_config["master"]]),
+                               'state': {'pre-checkin': False,
+                                         'uid': int(credential_dict[room_config["master"]].dedeuserid)}}
 
 
 event_types = {
@@ -78,12 +85,14 @@ def bind(live_danmaku: LiveDanmaku, master_config):
                                master_config=master_config,
                                room_info=roomInfos[__event_room_id])
 
+    '''
     @__live_danmaku.on("DISCONNECT")
     async def disconnect(event):
         __event_room_id = event['room_display_id']
         await refresh_credentials(masters=[roomInfos[__event_room_id]['room_config']['master'], ],
                                   room_infos=roomInfos,
                                   database=mydb)
+    '''
 
     @__live_danmaku.on("ALL")
     async def any_event(event):
@@ -104,29 +113,23 @@ def bind(live_danmaku: LiveDanmaku, master_config):
             event_types.add(event['type'])
 
 
-async def refresh_credentials_loop(master_config: dict, room_infos: dict, database: MySQLConnection):
+async def refresh_credentials_loop(credential_dict: dict, database: MySQLConnection):
     while True:
-        await refresh_credentials(master_config["masters"], room_infos, database)
-        await asyncio.sleep(30 * 60)
+        await refresh_credentials(credential_dict, database)
+        await asyncio.sleep(6 * 60 * 60)
 
 
-async def refresh_credentials(masters: list, room_infos: dict, database: MySQLConnection):
-    for __master in masters:
-        __credential = get_credential(__master)
-        if await __credential.check_refresh():
-            await __credential.refresh()
-            __sql = ("UPDATE credentials SET sessdata = %s, bili_jct = %s, buvid3 = %s, ac_time_value = %s "
-                     "WHERE master = %s")
-            __val = (
-                __credential.sessdata, __credential.bili_jct, __credential.buvid3, __credential.ac_time_value, __master)
+async def refresh_credentials(credential_dict: dict, database: MySQLConnection):
+    for master, credential in credential_dict.items():
+        if await credential.check_refresh():
+            await credential.refresh()
+            sql = ("UPDATE credentials SET sessdata = %s, bili_jct = %s, buvid3 = %s, ac_time_value = %s "
+                   "WHERE master = %s")
+            val = (
+                credential.sessdata, credential.bili_jct, credential.buvid3, credential.ac_time_value, master)
             with database.cursor() as cursor:
-                cursor.execute(__sql, __val)
+                cursor.execute(sql, val)
                 database.commit()
-        for __room_id, __room_info in room_infos.items():
-            if __room_info["room_config"]["master"] != __master:
-                continue
-            __room_info['live_room'] = LiveRoom(__room_id, credential=__credential)
-            __room_info['live_danmaku'].credential = __credential
 
 
 # Main entry point
@@ -137,6 +140,7 @@ with open(os.path.join(path, "Configs/mysql.json")) as mysqlFile:
     mydb = connect(**load(mysqlFile))
 
 ROOM_IDS = masterConfig["room_ids"]
+
 '''
 roomInfos
     - <room_id>:
@@ -147,10 +151,20 @@ roomInfos
         - 'state': <>
 '''
 roomInfos = {}
-load_config(room_infos=roomInfos, room_ids=ROOM_IDS)
+
+'''
+credential_dict
+    - master: credential
+'''
+credential_dict = {}
+
+load_credential(credential_dict)
+load_config(room_infos=roomInfos, room_ids=ROOM_IDS, credential_dict=credential_dict)
+
 for room_id in ROOM_IDS:
     bind(live_danmaku=roomInfos[room_id]['live_danmaku'], master_config=masterConfig)
+
 if __name__ == "__main__":
     sync(asyncio.gather(*[roomInfos[room_id]['live_danmaku'].connect() for room_id in ROOM_IDS],
-                        refresh_credentials_loop(master_config=masterConfig, room_infos=roomInfos, database=mydb)
+                        refresh_credentials_loop(credential_dict=credential_dict, database=mydb)
                         ))
