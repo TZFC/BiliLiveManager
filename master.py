@@ -85,14 +85,10 @@ def bind(live_danmaku: LiveDanmaku, master_config):
                                master_config=master_config,
                                room_info=roomInfos[__event_room_id])
 
-    '''
     @__live_danmaku.on("DISCONNECT")
     async def disconnect(event):
         __event_room_id = event['room_display_id']
-        await refresh_credentials(masters=[roomInfos[__event_room_id]['room_config']['master'], ],
-                                  room_infos=roomInfos,
-                                  database=mydb)
-    '''
+        await refresh_credentials(credential_dict=credential_dict, database=mydb)
 
     @__live_danmaku.on("ALL")
     async def any_event(event):
@@ -115,8 +111,12 @@ def bind(live_danmaku: LiveDanmaku, master_config):
 
 async def refresh_credentials_loop(credential_dict: dict, database: MySQLConnection):
     while True:
-        await refresh_credentials(credential_dict, database)
-        await asyncio.sleep(6 * 60 * 60)
+        try:
+            await refresh_credentials(credential_dict, database)
+            await asyncio.sleep(3 * 60 * 60)
+        except:
+            print("refresh failed")
+            await asyncio.sleep(5 * 60)
 
 
 async def refresh_credentials(credential_dict: dict, database: MySQLConnection):
