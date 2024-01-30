@@ -45,12 +45,12 @@ Create tables
 ```
 CREATE TABLE credentials (master VARCHAR(255), sessdata VARCHAR(255), bili_jct VARCHAR(255), buvid3 VARCHAR(255), dedeuserid VARCHAR(255), ac_time_value VARCHAR(255))
 CREATE TABLE liveTime (room_id INT, start TIMESTAMP, end TIMESTAMP, summary VARCHAR(255))
-CREATE TABLE danmu (name VARCHAR(255), uid INT, text VARCHAR(255), type INT, medal_id INT, medal_level INT, time TIMESTAMP, room_id INT, danmu_id VARCHAR(255) UNIQUE)
-CREATE TABLE banned (uid INT, reason VARCHAR(255), time TIMESTAMP, room_id INT)
+CREATE TABLE danmu (name VARCHAR(255), uid BIGINT UNSIGNED, text VARCHAR(255), type INT, medal_id INT, medal_level INT, time TIMESTAMP, room_id INT, danmu_id VARCHAR(255) UNIQUE)
+CREATE TABLE banned (uid BIGINT UNSIGNED, reason VARCHAR(255), time TIMESTAMP, room_id INT)
 CREATE TABLE postProgress (room_id INT, aid INT)
-CREATE TABLE checkin (uid INT, room_id INT, name VARCHAR(255), slot_0 INT, slot_1 INT, slot_2 INT, slot_3 INT, slot_4 INT, slot_5 INT, slot_6 INT, slot_7 INT, slot_8 INT, slot_9 INT, slot_10 INT, slot_11 INT, slot_12 INT, slot_13 INT, slot_14 INT, slot_15 INT, slot_16 INT, slot_17 INT, slot_18 INT, slot_19 INT, slot_20 INT, slot_21 INT, slot_22 INT, slot_23 INT, slot_24 INT, slot_25 INT, slot_26 INT, slot_27 INT, slot_28 INT, slot_29 INT, count INT AS SUM(slot_0, slot_1, slot_2, slot_3, slot_4, slot_5, slot_6, slot_7, slot_8, slot_9, slot_10, slot_11, slot_12, slot_13, slot_14, slot_15, slot_16, slot_17, slot_18, slot_19, slot_20, slot_21, slot_22, slot_23, slot_24, slot_25, slot_26, slot_27, slot_28, slot_29), all_time INT, UNIQUE (uid, room_id))
+CREATE TABLE checkin (uid BIGINT UNSIGNED, room_id INT, name VARCHAR(255), slot_0 INT, slot_1 INT, slot_2 INT, slot_3 INT, slot_4 INT, slot_5 INT, slot_6 INT, slot_7 INT, slot_8 INT, slot_9 INT, slot_10 INT, slot_11 INT, slot_12 INT, slot_13 INT, slot_14 INT, slot_15 INT, slot_16 INT, slot_17 INT, slot_18 INT, slot_19 INT, slot_20 INT, slot_21 INT, slot_22 INT, slot_23 INT, slot_24 INT, slot_25 INT, slot_26 INT, slot_27 INT, slot_28 INT, slot_29 INT, count INT AS SUM(slot_0, slot_1, slot_2, slot_3, slot_4, slot_5, slot_6, slot_7, slot_8, slot_9, slot_10, slot_11, slot_12, slot_13, slot_14, slot_15, slot_16, slot_17, slot_18, slot_19, slot_20, slot_21, slot_22, slot_23, slot_24, slot_25, slot_26, slot_27, slot_28, slot_29), all_time INT, UNIQUE (uid, room_id))
 cur.execute("INSERT INTO checkin (uid, room_id, name, slot_0) VALUES (<MASTER_UID_HERE>, ROOM_ID_HERE, 'MASTER_NICKNAME', 1)")
-CREATE TABLE blacklist (uid INT)
+CREATE TABLE blacklist (uid BIGINT UNSIGNED)
 ```
 
 ## 3. Log into bilibili.com in **PRIVATE** browser window
