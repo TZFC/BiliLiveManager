@@ -15,13 +15,14 @@ async def handle_dm_interaction(event, database, master_config, room_info):
     try:
         data = loads(event['data']['data']['data'])
         content = "--" + data['combo'][0]['content']
-        id = event['data']['data']['id']
+        event_id = event['data']['data']['id']
         if any(live_end_word in data['combo'][0]['content'] for live_end_word in {"晚安", "午安", "拜拜"}):
             info = await room_info['live_room'].get_room_info()
             live_status = info['room_info']['live_status']
             if live_status == LIVE_STATUS_STREAMING \
                     and room_info['room_config']["feature_flags"]["checkin"] \
                     and not room_info['state']['pre-checkin']:
+                room_info['state']['pre-checkin'] = True
                 async with asyncio.TaskGroup() as tg:
                     with database.cursor() as cursor:
                         sql = "SELECT start FROM liveTime WHERE room_id = %s AND end IS NULL AND summary IS NULL"
@@ -42,14 +43,14 @@ async def handle_dm_interaction(event, database, master_config, room_info):
                     tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",
                                                checkin_days=room_info['room_config']['checkin_days'],
                                                content=top_uid_name_count))
-                    room_info['state']['pre-checkin'] = True
             return
         await record_danmaku(name="他们都在说", received_uid=0, time=datetime.now().replace(microsecond=0),
                              medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE, room_id=room_id,
-                             danmu_id=id, database=database)
+                             danmu_id=event_id, database=database)
         return
-    except:
-        pass
+    except Exception as e:
+        print(event)
+        print(e)
 
 
 async def handle_super_chat_message(event, database, master_config, room_info):
