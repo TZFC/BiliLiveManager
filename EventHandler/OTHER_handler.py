@@ -31,7 +31,7 @@ async def handle_dm_interaction(event, database, master_config, room_info):
                         start_time = cursor.fetchall()[0][0]
                     # 统计直播间发言人
                     await record_checkin(start_time=start_time,
-                                         end_time=datetime.fromtimestamp(event['data']["info"][TIMESTAMP_IDX]['ts']),
+                                         end_time=datetime.now(),
                                          master=room_info['room_config']['master'],
                                          room_id=room_id,
                                          checkin_days=room_info['room_config']['checkin_days'],
