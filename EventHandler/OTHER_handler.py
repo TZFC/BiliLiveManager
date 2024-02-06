@@ -19,6 +19,8 @@ async def handle_dm_interaction(event, database, master_config, room_info):
         content = "--" + data['combo'][0]['content']
         event_id = event['data']['data']['id']
         if any(live_end_word in data['combo'][0]['content'] for live_end_word in {"晚安", "午安", "拜拜"}):
+            if not room_info['room_config']["feature_flags"]["report_checkin"]:
+                return
             info = await room_info['live_room'].get_room_info()
             live_status = info['room_info']['live_status']
             if live_status == LIVE_STATUS_STREAMING \
