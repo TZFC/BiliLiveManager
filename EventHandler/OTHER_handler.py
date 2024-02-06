@@ -14,6 +14,8 @@ async def handle_dm_interaction(event, database, master_config, room_info):
     room_id = event['room_display_id']
     try:
         data = loads(event['data']['data']['data'])
+        if data['combo'][0]['status'] != DM_INTERACTION_END:
+            return
         content = "--" + data['combo'][0]['content']
         event_id = event['data']['data']['id']
         if any(live_end_word in data['combo'][0]['content'] for live_end_word in {"晚安", "午安", "拜拜"}):
