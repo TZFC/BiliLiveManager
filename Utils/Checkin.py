@@ -49,3 +49,7 @@ async def record_checkin(start_time: datetime, end_time: datetime, master: str, 
         sql = f"UPDATE checkin SET slot_{next_head} = 1 where room_id = %s AND uid = %s"
         val = (room_id, dedeuserid)
         cursor.execute(sql, val)
+
+        sql = "DELETE FROM checkin WHERE count = 0"
+        cursor.execute(sql)
+        database.commit()
