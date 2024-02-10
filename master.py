@@ -1,5 +1,6 @@
 import asyncio
 import os
+from datetime import datetime
 from json import load
 
 from bilibili_api import sync
@@ -12,6 +13,7 @@ from EventHandler.OTHER_handler import handle_dm_interaction, handle_super_chat_
 from EventHandler.PREPARING_handler import handle_preparing
 from EventHandler.SEND_GIFT_handler import handle_send_gift
 from Utils.CredentialGetter import get_credential
+from Utils.EVENT_IDX import event_types
 
 
 def load_credential(credential_dict):
@@ -31,23 +33,6 @@ def load_config(room_infos, room_ids, credential_dict):
                                'live_room': LiveRoom(room_id, credential=credential_dict[room_config["master"]]),
                                'state': {'pre-checkin': False,
                                          'uid': int(credential_dict[room_config["master"]].dedeuserid)}}
-
-
-event_types = {
-    'LIVE', 'SEND_GIFT', 'DANMU_MSG', 'PREPARING', 'VERIFICATION_SUCCESSFUL', 'VIEW', 'ONLINE_RANK_COUNT',
-    'ONLINE_RANK_V2', 'WATCHED_CHANGE', 'STOP_LIVE_ROOM_LIST', 'INTERACT_WORD', 'DANMU_AGGREGATION',
-    'ROOM_REAL_TIME_MESSAGE_UPDATE', 'ENTRY_EFFECT', 'POPULAR_RANK_CHANGED', 'LIKE_INFO_V3_CLICK',
-    'LIKE_INFO_V3_UPDATE', 'POPULARITY_RED_POCKET_WINNER_LIST', 'POPULARITY_RED_POCKET_START', 'WIDGET_BANNER',
-    'AREA_RANK_CHANGED', 'POPULARITY_RED_POCKET_NEW', 'NOTICE_MSG', 'GUARD_BUY', 'USER_TOAST_MSG', 'COMBO_SEND',
-    'COMMON_NOTICE_DANMAKU', 'DM_INTERACTION', 'TRADING_SCORE', 'ENTRY_EFFECT_MUST_RECEIVE',
-    'MESSAGEBOX_USER_MEDAL_CHANGE', 'LITTLE_MESSAGE_BOX', 'GUARD_HONOR_THOUSAND', 'SYS_MSG', 'ONLINE_RANK_TOP3',
-    'USER_PANEL_RED_ALARM', 'SUPER_CHAT_MESSAGE', 'PK_BATTLE_PRE_NEW', 'PK_BATTLE_PRE', 'PK_BATTLE_START_NEW',
-    'PK_BATTLE_START', 'PK_BATTLE_PROCESS_NEW', 'PK_BATTLE_PROCESS', 'PK_BATTLE_FINAL_PROCESS', 'PK_BATTLE_END',
-    'PK_BATTLE_SETTLE_USER', 'PK_BATTLE_SETTLE_V2', 'PK_BATTLE_SETTLE', 'LIVE_OPEN_PLATFORM_GAME',
-    'LIVE_INTERACT_GAME_STATE_CHANGE', 'LIKE_INFO_V3_NOTICE', 'SUPER_CHAT_MESSAGE_JPN', 'LIVE_PANEL_CHANGE_CONTENT',
-    'GIFT_PANEL_PLAN', 'GIFT_STAR_PROCESS', 'ROOM_SKIN_MSG', 'USER_INFO_UPDATE', 'CUSTOM_NOTICE_CARD',
-    'GIFT_STAR_PROCESS', 'WIDGET_GIFT_STAR_PROCESS', 'ROOM_CHANGE', 'SHOPPING_CART_SHOW', 'RECOMMEND_CARD',
-    'GOTO_BUY_FLOW'}
 
 
 def bind(live_danmaku: LiveDanmaku, master_config):
@@ -115,7 +100,7 @@ async def refresh_credentials_loop(credential_dict: dict, database: MySQLConnect
             await refresh_credentials(credential_dict, database)
             await asyncio.sleep(3 * 60 * 60)
         except:
-            print("refresh failed")
+            print(f"refresh failed at {datetime.now()}")
             await asyncio.sleep(5 * 60)
 
 
