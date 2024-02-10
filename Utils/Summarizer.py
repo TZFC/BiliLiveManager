@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from json import load
 
-OFFSET = timedelta(seconds=30)
+OFFSET = timedelta(minutes=1)
 path = os.getcwd()
 
 
@@ -43,5 +43,4 @@ def summarize(room_id: int, database) -> (str, str, datetime, datetime):
     email_text = "\n".join(email_rows)
     jump_text = "\n".join(jump_rows)
 
-    # //TODO: find where ? and haha is and report in email_text
     return email_text, jump_text, start_time, end_time

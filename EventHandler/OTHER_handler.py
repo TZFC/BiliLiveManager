@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from json import loads
 
 from Utils.Checkin import record_checkin
@@ -48,7 +48,8 @@ async def handle_dm_interaction(event, database, master_config, room_info):
                                                checkin_days=room_info['room_config']['checkin_days'],
                                                content=top_uid_name_count))
             return
-        await record_danmaku(name="他们都在说", received_uid=0, time=datetime.now().replace(microsecond=0),
+        await record_danmaku(name="他们都在说", received_uid=0,
+                             time=datetime.now().replace(microsecond=0) - timedelta(minutes=1),
                              medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE, room_id=room_id,
                              danmu_id=event_id, database=database)
         return
