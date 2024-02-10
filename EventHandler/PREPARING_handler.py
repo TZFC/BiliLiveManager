@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from Utils.Checkin import record_checkin
 from Utils.EmailSender import send_mail_async
@@ -33,8 +33,10 @@ async def handle_preparing(event, database, master_config, room_info):
                                 subject=f"{room_info['room_config']['nickname']}于{start_time}路灯",
                                 text="本期无路灯"))
 
+        if not start_time:
+            return
         if room_info['room_config']["feature_flags"]["checkin"]:
-            if not room_info['state']['pre-checkin']:
+            if not room_info['state']['pre-checkin'] and end_time - start_time > timedelta(minutes=5):
                 # 统计直播间发言人
                 await record_checkin(start_time=start_time,
                                      end_time=end_time,

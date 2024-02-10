@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from json import loads
 
 from Utils.Checkin import record_checkin
@@ -14,9 +14,13 @@ async def handle_dm_interaction(event, database, master_config, room_info):
     room_id = event['room_display_id']
     try:
         data = loads(event['data']['data']['data'])
+        if data['combo'][0]['status'] != DM_INTERACTION_END:
+            return
         content = "--" + data['combo'][0]['content']
         event_id = event['data']['data']['id']
         if any(live_end_word in data['combo'][0]['content'] for live_end_word in {"晚安", "午安", "拜拜"}):
+            if not room_info['room_config']["feature_flags"]["report_checkin"]:
+                return
             info = await room_info['live_room'].get_room_info()
             live_status = info['room_info']['live_status']
             if live_status == LIVE_STATUS_STREAMING \
@@ -44,7 +48,8 @@ async def handle_dm_interaction(event, database, master_config, room_info):
                                                checkin_days=room_info['room_config']['checkin_days'],
                                                content=top_uid_name_count))
             return
-        await record_danmaku(name="他们都在说", received_uid=0, time=datetime.now().replace(microsecond=0),
+        await record_danmaku(name="他们都在说", received_uid=0,
+                             time=datetime.now().replace(microsecond=0) - timedelta(minutes=1),
                              medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE, room_id=room_id,
                              danmu_id=event_id, database=database)
         return
