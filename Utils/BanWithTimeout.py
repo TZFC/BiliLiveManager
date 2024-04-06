@@ -17,7 +17,7 @@ async def ban_with_timeout(live_room: LiveRoom, uid: int, offense: tuple, databa
             if not result:
                 print(offense)
                 if offense[1] % 60 == 0:
-                    message = f"发{offense[0]}会被关{offense[1] / 60}分，送{offense[2]}提前解"
+                    message = f"发{offense[0]}会被关{offense[1] // 60}分，送{offense[2]}提前解"
                 else:
                     message = f"发{offense[0]}会被关{offense[1] / 60:.1f}分，送{offense[2]}提前解"
                 print(f"message: {message}")
