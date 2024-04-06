@@ -15,11 +15,14 @@ async def ban_with_timeout(live_room: LiveRoom, uid: int, offense: tuple, databa
             cursor.execute(select_sql, val)
             result = cursor.fetchone()
             if not result:
+                print(offense)
                 if offense[1] % 60 == 0:
                     message = f"发{offense[0]}会被关{offense[1] / 60}分，送{offense[2]}提前解"
                 else:
                     message = f"发{offense[0]}会被关{offense[1] / 60:.1f}分，送{offense[2]}提前解"
-                await live_room.send_danmaku(Danmaku(message), reply_mid=uid)
+                print(f"message: {message}")
+                result = await live_room.send_danmaku(Danmaku(message), reply_mid=uid)
+                print(result)
                 cursor.execute(insert_sql, val)
                 database.commit()
     except Exception as e:
