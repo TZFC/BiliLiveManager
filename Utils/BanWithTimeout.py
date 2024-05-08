@@ -3,7 +3,7 @@ import asyncio
 from bilibili_api.exceptions import ResponseCodeException
 from bilibili_api.live import LiveRoom
 from bilibili_api import Danmaku
-from UnbanAll import unban_retry
+from Utils.UnbanAll import unban_retry
 
 async def ban_with_timeout(live_room: LiveRoom, uid: int, offense: tuple, database):
     try:
