@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from Utils.BanWithTimeout import ban_with_timeout
 from Utils.EVENT_IDX import TEXT_TYPE
@@ -20,9 +20,10 @@ async def ban_on_keyword(text: str, message_type: int, received_uid: int, room_i
                                              uid=received_uid,
                                              offense=max_offense,
                                              database=database))
+        release_time = datetime.now() + timedelta(seconds=max_offense[1])
         sql = "INSERT INTO banned (uid, reason, time, room_id) VALUES (%s, %s, %s, %s)"
         val = (received_uid, max_offense[2],
-               datetime.now().strftime('%Y-%m-%d %H:%M:%S'), room_id)
+               release_time.strftime('%Y-%m-%d %H:%M:%S'), room_id)
         with database.cursor() as cursor:
             cursor.execute(sql, val)
         database.commit()

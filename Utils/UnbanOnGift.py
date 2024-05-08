@@ -2,7 +2,8 @@ import asyncio
 
 from bilibili_api.exceptions import ResponseCodeException
 
-from BanWithTimeout import unban_retry
+from UnbanAll import unban_retry
+
 
 async def unban_on_gift(sender_uid: int, gift: str, room_id: int, live_room, database):
     sql = "SELECT reason, time FROM banned WHERE uid=%s AND room_id=%s"
