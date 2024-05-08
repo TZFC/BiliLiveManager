@@ -1,12 +1,18 @@
 # (安全网)放出封禁名单中所有人
-from bilibili_api import retry
 from bilibili_api.exceptions import ResponseCodeException
 from bilibili_api.live import LiveRoom
 from datetime import datetime
+from time import sleep
 
-@retry()
+
 async def unban_retry(live_room: LiveRoom, uid: int):
-    await live_room.unban_user(uid)
+    for retry_time in range(3):
+        try:
+            await live_room.unban_user(uid)
+            return
+        except:
+            sleep(1)
+    print("All 3 attempts to unban failed")
 
 
 async def unban_all(live_room: LiveRoom, database):
