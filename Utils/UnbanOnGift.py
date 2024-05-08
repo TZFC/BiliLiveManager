@@ -1,5 +1,8 @@
 import asyncio
 
+from bilibili_api.exceptions import ResponseCodeException
+
+from BanWithTimeout import unban_retry
 
 async def unban_on_gift(sender_uid: int, gift: str, room_id: int, live_room, database):
     sql = "SELECT reason, time FROM banned WHERE uid=%s AND room_id=%s"
@@ -12,7 +15,12 @@ async def unban_on_gift(sender_uid: int, gift: str, room_id: int, live_room, dat
     except:
         return
     if reason == gift:
-        asyncio.create_task(live_room.unban_user(uid=sender_uid))
+        try:
+            await unban_retry(live_room, sender_uid)
+        except ResponseCodeException as e:
+            print(f"unban failed for {sender_uid}")
+            print(e)
+            return
         sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
         val = (sender_uid, room_id)
         with database.cursor() as cursor:
