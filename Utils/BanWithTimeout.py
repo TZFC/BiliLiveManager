@@ -2,9 +2,12 @@ import asyncio
 
 from bilibili_api.exceptions import ResponseCodeException
 from bilibili_api.live import LiveRoom
-from bilibili_api import Danmaku
+from bilibili_api import Danmaku, retry
 
 
+@retry()
+async def unban_retry(live_room: LiveRoom, uid: int):
+    await live_room.unban_user(uid)
 async def ban_with_timeout(live_room: LiveRoom, uid: int, offense: tuple, database):
     try:
         await live_room.ban_user(uid)
@@ -29,9 +32,10 @@ async def ban_with_timeout(live_room: LiveRoom, uid: int, offense: tuple, databa
         print(e)
     await asyncio.sleep(offense[1])
     try:
-        await live_room.unban_user(uid)
-    except ResponseCodeException:
-        pass
+        await unban_retry(live_room, uid)
+    except ResponseCodeException as e:
+        print(f"unban failed for {uid}")
+        print(e)
     sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
     val = (uid, live_room.room_display_id)
     with database.cursor() as cursor:
