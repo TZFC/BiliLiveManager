@@ -20,7 +20,7 @@ async def unban_all(live_room: LiveRoom, database):
     val = (live_room.room_display_id,)
     with database.cursor() as cursor:
         cursor.execute(sql, val)
-    result = cursor.fetchall()
+        result = cursor.fetchall()
     for uid, time in result:
         if time < datetime.now():
             print(f"{uid} not properly released. Releasing at live end.")
