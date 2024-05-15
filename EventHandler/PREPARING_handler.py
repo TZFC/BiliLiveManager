@@ -21,10 +21,10 @@ async def handle_preparing(event, database, master_config, room_info):
     # 提炼路灯邮件文 及 跳转文
     email_text, jump_text, start_time, end_time = summarize(room_id, database=database)
 
-    # (安全网) 放出所有因为错误没放出的禁言, 不可以放进tg因为database会冲突占用
-    await unban_all(room_info['live_room'], database)
-
     async with asyncio.TaskGroup() as tg:
+        # (安全网) 放出所有因为错误没放出的禁言
+        tg.create_task(unban_all(room_info['live_room'], database))
+
         # 寄出邮件
         if email_text:
             tg.create_task(
