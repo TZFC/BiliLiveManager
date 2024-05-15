@@ -29,7 +29,8 @@ async def unban_all(live_room: LiveRoom, database):
         except ResponseCodeException as e:
             print(f"unban failed for {uid}")
             print(e)
-        sql = "DELETE FROM banned WHERE uid=%s AND room_id=%s"
-        val = (uid, live_room.room_display_id)
-        with database.cursor() as cursor:
-            cursor.execute(sql, val)
+    # 清空封禁记录
+    sql = "DELETE FROM banned WHERE room_id=%s"
+    val = (live_room.room_display_id,)
+    with database.cursor() as cursor:
+        cursor.execute(sql, val)
