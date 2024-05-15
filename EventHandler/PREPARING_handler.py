@@ -5,6 +5,7 @@ from Utils.Checkin import record_checkin
 from Utils.EmailSender import send_mail_async
 from Utils.Summarizer import summarize
 from Utils.TopCheckin import get_top_checkin
+from Utils.UnbanAll import unban_all
 from web.UpdatePage import update_page
 
 
@@ -21,6 +22,9 @@ async def handle_preparing(event, database, master_config, room_info):
     email_text, jump_text, start_time, end_time = summarize(room_id, database=database)
 
     async with asyncio.TaskGroup() as tg:
+        # (安全网) 放出所有因为错误没放出的禁言
+        tg.create_task(unban_all(room_info['live_room'], database))
+
         # 寄出邮件
         if email_text:
             tg.create_task(
