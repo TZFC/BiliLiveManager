@@ -47,13 +47,15 @@ async def handle_danmu_msg(event, database, master_config, room_info):
                     room_info['state']['pre-checkin'] = True
         # 封禁关键词
         if room_info['room_config']["feature_flags"]["unban"]:
-            tg.create_task(ban_on_keyword(text=text,
-                                          message_type=message_type,
-                                          received_uid=received_uid,
-                                          room_id=room_id,
-                                          live_room=room_info['live_room'],
-                                          room_config=room_info['room_config'],
-                                          database=database))
+            # 跳过自己
+            if received_uid != room_info['state']['uid']:
+                tg.create_task(ban_on_keyword(text=text,
+                                              message_type=message_type,
+                                              received_uid=received_uid,
+                                              room_id=room_id,
+                                              live_room=room_info['live_room'],
+                                              room_config=room_info['room_config'],
+                                              database=database))
         # 记录弹幕
         try:
             medal_room = event["data"]["info"][MEDAL_INFO_IDX][MEDAL_ROOMID_IDX]
