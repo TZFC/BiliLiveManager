@@ -18,8 +18,8 @@ async def handle_preparing(event, database, master_config, room_info):
         cursor.execute(sql, val)
     database.commit()
 
-    # 提炼路灯邮件文 及 跳转文
-    email_text, jump_text, start_time, end_time = summarize(room_id, database=database)
+    # 提炼路灯邮件文 及 跳转文 及 上舰记录
+    email_text, jump_text, start_time, end_time = summarize(room_id,database=database)
 
     async with asyncio.TaskGroup() as tg:
         # (安全网) 放出所有因为错误没放出的禁言

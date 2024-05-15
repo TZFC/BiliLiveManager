@@ -26,6 +26,18 @@ def summarize(room_id: int, database) -> (str, str, datetime, datetime):
                        (room_id, start_time, end_time))
         raw_danmu = cursor.fetchall()
 
+        # 获取舰长记录
+        sql = "SELECT uid, username, guard_name, guard_num FROM guard WHERE room_id = %s"
+        val = (room_id,)
+        cursor.execute(sql, val)
+        guard_record = cursor.fetchall()
+
+        # 删除舰长记录
+        sql = "DELETE FROM guard WHERE room_id = %s"
+        val = (room_id,)
+        cursor.execute(sql, val)
+        database.commit()
+
     email_rows = []
     jump_rows = []
     for row in raw_danmu:
@@ -40,7 +52,22 @@ def summarize(room_id: int, database) -> (str, str, datetime, datetime):
             row[1],  # 去除指令词的路灯内容
         ]))
 
-    email_text = "\n".join(email_rows)
-    jump_text = "\n".join(jump_rows)
+    sum_guard_record = {} #{(uid, guard_name):[username, guard_num_sum]}
+    for uid, username, guard_name, guard_num in guard_record:
+        try:
+            sum_guard_record[(uid, guard_name)][0] = username
+            sum_guard_record[(uid, guard_name)][1] += guard_num
+        except KeyError:
+            sum_guard_record[(uid, guard_name)] = [username, guard_num]
 
+    guard_rows = []
+    for (uid, guard_name), [username, guard_num_sum] in sum_guard_record.items():
+        guard_rows.append("\t".join([
+            username, uid, guard_name, guard_num_sum
+        ]))
+    sorted(guard_rows)
+
+    email_text = "\n".join(email_rows+guard_rows)
+    jump_text = "\n".join(jump_rows)
+    guard_record = "\n".join(guard_rows)
     return email_text, jump_text, start_time, end_time

@@ -22,7 +22,7 @@ ROOM_IDS = masterConfig["room_ids"]
 roomInfos = {}
 for room_id in ROOM_IDS:
     roomInfos[room_id] = {}
-    load_room_info(update_room_id=room_id, room_info=roomInfos[room_id])
+    load_room_info(room_id=room_id, room_info=roomInfos[room_id])
 
 MAX_NON_REPLAY = 10  # 每小时内最多上传 10 个不是录播的视频
 with mydb.cursor() as cursor:

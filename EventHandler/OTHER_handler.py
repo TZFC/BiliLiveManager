@@ -1,13 +1,16 @@
 import asyncio
 from datetime import datetime, timedelta
 from json import loads
-
+from re import match
 from Utils.Checkin import record_checkin
 from Utils.EVENT_IDX import *
 from Utils.RecordDanmaku import record_danmaku
 from Utils.SendReportCheckin import send_report_checkin
 from Utils.TopCheckin import get_top_checkin
 from web.UpdatePage import update_page
+from bilibili_api.user import name2uid
+
+guardName_guardNum_pattern = r'^(.*?)\*(\d+).*?$'
 
 
 async def handle_dm_interaction(event, database, master_config, room_info):
@@ -76,3 +79,38 @@ async def handle_super_chat_message(event, database, master_config, room_info):
                              danmu_id=None, database=database)
     except:
         pass
+
+
+async def handle_guard_buy(event, database, master_config, room_info):
+    sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
+    val = (event['room_display_id'],
+           room_info['state']['guard'][event['data']['data']['uid']],
+           room_info['state']['guard'][event['data']['data']['username']],
+           room_info['state']['guard'][event['data']['data']['gift_name']],
+           room_info['state']['guard'][event['data']['data']['num']]
+           )
+    with database.cursor as cursor:
+        cursor.execute(sql, val)
+    database.commit()
+
+
+async def handle_common_notice(event, database, master_config, room_info):
+    try:
+        if event['data']['data']['content_segments'][2]['text'] == '大航海盲盒':
+            guard_name, guard_num = match(guardName_guardNum_pattern,
+                                          event['data']['data']['content_segments'][4]['text']).groups()
+        else:
+            return
+    except KeyError:
+        print("Malformed common notice" + str(event))
+        return
+    sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
+    val = (event['room_display_id'],
+           await name2uid(event['data']['data']['content_segments'][0]['text']),
+           event['data']['data']['content_segments'][0]['text'],
+           guard_name,
+           guard_num
+           )
+    with database.cursor as cursor:
+        cursor.execute(sql, val)
+    database.commit()
