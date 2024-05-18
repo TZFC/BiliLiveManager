@@ -69,5 +69,4 @@ def summarize(room_id: int, database) -> (str, str, datetime, datetime):
 
     email_text = "\n".join(email_rows+guard_rows)
     jump_text = "\n".join(jump_rows)
-    guard_record = "\n".join(guard_rows)
     return email_text, jump_text, start_time, end_time
