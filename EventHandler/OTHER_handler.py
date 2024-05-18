@@ -108,8 +108,9 @@ async def handle_common_notice(event, database, master_config, room_info):
                                           event['data']['data']['content_segments'][4]['text']).groups()
         else:
             return
-    except KeyError:
+    except Exception as e:
         print("Malformed common notice" + str(event))
+        print(e)
         return
     sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
     val = (event['room_display_id'],
