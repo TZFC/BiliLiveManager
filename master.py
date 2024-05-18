@@ -9,7 +9,8 @@ from mysql.connector import connect, MySQLConnection
 
 from EventHandler.DANMU_MSG_handler import handle_danmu_msg
 from EventHandler.LIVE_Handler import handle_live
-from EventHandler.OTHER_handler import handle_dm_interaction, handle_super_chat_message, handle_guard_buy
+from EventHandler.OTHER_handler import handle_dm_interaction, handle_super_chat_message, handle_guard_buy, \
+    handle_common_notice
 from EventHandler.PREPARING_handler import handle_preparing
 from EventHandler.SEND_GIFT_handler import handle_send_gift
 from Utils.CredentialGetter import get_credential
@@ -97,6 +98,12 @@ def bind(live_danmaku: LiveDanmaku, master_config):
                                    database=mydb,
                                    master_config=master_config,
                                    room_info=roomInfos[__event_room_id])
+        elif event['type'] == 'COMMON_NOTICE_DANMAKU':
+            __event_room_id = event['room_display_id']
+            await handle_common_notice(event=event,
+                                       database=mydb,
+                                       master_config=master_config,
+                                       room_info=roomInfos[__event_room_id])
         if event['type'] not in event_types:
             print(event)
             event_types.add(event['type'])
