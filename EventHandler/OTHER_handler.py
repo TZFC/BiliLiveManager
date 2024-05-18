@@ -91,7 +91,7 @@ async def handle_guard_buy(event, database, master_config, room_info):
                room_info['state']['guard'][event['data']['data']['gift_name']],
                room_info['state']['guard'][event['data']['data']['num']]
                )
-        with database.cursor as cursor:
+        with database.cursor() as cursor:
             cursor.execute(sql, val)
         database.commit()
     except Exception as e:
@@ -118,6 +118,6 @@ async def handle_common_notice(event, database, master_config, room_info):
            guard_name,
            guard_num
            )
-    with database.cursor as cursor:
+    with database.cursor() as cursor:
         cursor.execute(sql, val)
     database.commit()
