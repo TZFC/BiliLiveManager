@@ -15,50 +15,51 @@ guardName_guardNum_pattern = r'^(.*?)\*(\d+).*?$'
 
 async def handle_dm_interaction(event, database, master_config, room_info):
     room_id = event['room_display_id']
-    try:
-        data = loads(event['data']['data']['data'])
-        if data['combo'][0]['status'] != DM_INTERACTION_END:
-            return
-        content = "--" + data['combo'][0]['content']
-        event_id = event['data']['data']['id']
-        if any(live_end_word in data['combo'][0]['content'] for live_end_word in {"晚安", "午安", "拜拜"}):
-            if not room_info['room_config']["feature_flags"]["report_checkin"]:
+    data = loads(event['data']['data']['data'])
+    if 'combo' in data.keys():
+        try:
+            if data['combo'][0]['status'] != DM_INTERACTION_END:
                 return
-            info = await room_info['live_room'].get_room_info()
-            live_status = info['room_info']['live_status']
-            if live_status == LIVE_STATUS_STREAMING \
-                    and room_info['room_config']["feature_flags"]["checkin"] \
-                    and not room_info['state']['pre-checkin']:
-                room_info['state']['pre-checkin'] = True
-                async with asyncio.TaskGroup() as tg:
-                    with database.cursor() as cursor:
-                        sql = "SELECT start FROM liveTime WHERE room_id = %s AND end IS NULL AND summary IS NULL"
-                        val = (room_id,)
-                        cursor.execute(sql, val)
-                        start_time = cursor.fetchall()[0][0]
-                    # 统计直播间发言人
-                    await record_checkin(start_time=start_time,
-                                         end_time=datetime.now(),
-                                         master=room_info['room_config']['master'],
-                                         room_id=room_id,
-                                         checkin_days=room_info['room_config']['checkin_days'],
-                                         database=database)
-                    top_uid_name_count = await get_top_checkin(master_uid=room_info['master_credential'].dedeuserid,
-                                                               room_id=room_id, database=database)
-                    tg.create_task(send_report_checkin(live_room=room_info['live_room'],
-                                                       top_uid_username_count=top_uid_name_count))
-                    tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",
-                                               checkin_days=room_info['room_config']['checkin_days'],
-                                               content=top_uid_name_count))
+            content = "--" + data['combo'][0]['content']
+            event_id = event['data']['data']['id']
+            if any(live_end_word in data['combo'][0]['content'] for live_end_word in {"晚安", "午安", "拜拜"}):
+                if not room_info['room_config']["feature_flags"]["report_checkin"]:
+                    return
+                info = await room_info['live_room'].get_room_info()
+                live_status = info['room_info']['live_status']
+                if live_status == LIVE_STATUS_STREAMING \
+                        and room_info['room_config']["feature_flags"]["checkin"] \
+                        and not room_info['state']['pre-checkin']:
+                    room_info['state']['pre-checkin'] = True
+                    async with asyncio.TaskGroup() as tg:
+                        with database.cursor() as cursor:
+                            sql = "SELECT start FROM liveTime WHERE room_id = %s AND end IS NULL AND summary IS NULL"
+                            val = (room_id,)
+                            cursor.execute(sql, val)
+                            start_time = cursor.fetchall()[0][0]
+                        # 统计直播间发言人
+                        await record_checkin(start_time=start_time,
+                                             end_time=datetime.now(),
+                                             master=room_info['room_config']['master'],
+                                             room_id=room_id,
+                                             checkin_days=room_info['room_config']['checkin_days'],
+                                             database=database)
+                        top_uid_name_count = await get_top_checkin(master_uid=room_info['master_credential'].dedeuserid,
+                                                                   room_id=room_id, database=database)
+                        tg.create_task(send_report_checkin(live_room=room_info['live_room'],
+                                                           top_uid_username_count=top_uid_name_count))
+                        tg.create_task(update_page(target=f"/var/www/html/{room_id}.html",
+                                                   checkin_days=room_info['room_config']['checkin_days'],
+                                                   content=top_uid_name_count))
+                return
+            await record_danmaku(name="他们都在说", received_uid=0,
+                                 time=datetime.now().replace(microsecond=0) - timedelta(minutes=1),
+                                 medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE, room_id=room_id,
+                                 danmu_id=event_id, database=database)
             return
-        await record_danmaku(name="他们都在说", received_uid=0,
-                             time=datetime.now().replace(microsecond=0) - timedelta(minutes=1),
-                             medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE, room_id=room_id,
-                             danmu_id=event_id, database=database)
-        return
-    except Exception as e:
-        print(event)
-        print(e)
+        except Exception as e:
+            print(event)
+            print(e)
 
 
 async def handle_super_chat_message(event, database, master_config, room_info):
