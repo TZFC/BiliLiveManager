@@ -86,10 +86,10 @@ async def handle_guard_buy(event, database, master_config, room_info):
     try:
         sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
         val = (event['room_display_id'],
-               room_info['state']['guard'][event['data']['data']['uid']],
-               room_info['state']['guard'][event['data']['data']['username']],
-               room_info['state']['guard'][event['data']['data']['gift_name']],
-               room_info['state']['guard'][event['data']['data']['num']]
+               event['data']['data']['uid'],
+               event['data']['data']['username'],
+               event['data']['data']['gift_name'],
+               event['data']['data']['num']
                )
         with database.cursor() as cursor:
             cursor.execute(sql, val)
