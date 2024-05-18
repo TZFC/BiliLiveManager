@@ -112,9 +112,10 @@ async def handle_common_notice(event, database, master_config, room_info):
         print("Malformed common notice" + str(event))
         print(e)
         return
+    sender_uid_result = await name2uid(event['data']['data']['content_segments'][0]['text'])
     sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
     val = (event['room_display_id'],
-           await name2uid(event['data']['data']['content_segments'][0]['text']),
+           sender_uid_result['uid_list'][0]['uid'],
            event['data']['data']['content_segments'][0]['text'],
            guard_name,
            guard_num
