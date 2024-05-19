@@ -95,13 +95,10 @@ async def handle_guard_buy(event, database, master_config, room_info):
             cursor.execute(sql, val)
         database.commit()
     except Exception as e:
-        print(event)
-        print(e)
+        pass
 
 
 async def handle_common_notice(event, database, master_config, room_info):
-    print("received common notice:")
-    print(event)
     try:
         if event['data']['data']['content_segments'][2]['text'] == '大航海盲盒':
             guard_name, guard_num = match(guardName_guardNum_pattern,
@@ -109,8 +106,6 @@ async def handle_common_notice(event, database, master_config, room_info):
         else:
             return
     except Exception as e:
-        print("Malformed common notice" + str(event))
-        print(e)
         return
     sender_uid_result = await name2uid(event['data']['data']['content_segments'][0]['text'])
     sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
