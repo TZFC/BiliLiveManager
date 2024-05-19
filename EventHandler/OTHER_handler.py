@@ -117,7 +117,7 @@ async def handle_common_notice(event, database, master_config, room_info):
     val = (event['room_display_id'],
            sender_uid_result['uid_list'][0]['uid'],
            event['data']['data']['content_segments'][0]['text'],
-           guard_name,
+           '盲盒'+guard_name,
            guard_num
            )
     with database.cursor() as cursor:
