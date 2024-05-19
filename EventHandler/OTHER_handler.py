@@ -83,16 +83,19 @@ async def handle_super_chat_message(event, database, master_config, room_info):
 
 
 async def handle_guard_buy(event, database, master_config, room_info):
-    sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
-    val = (event['room_display_id'],
-           room_info['state']['guard'][event['data']['data']['uid']],
-           room_info['state']['guard'][event['data']['data']['username']],
-           room_info['state']['guard'][event['data']['data']['gift_name']],
-           room_info['state']['guard'][event['data']['data']['num']]
-           )
-    with database.cursor as cursor:
-        cursor.execute(sql, val)
-    database.commit()
+    try:
+        sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
+        val = (event['room_display_id'],
+               event['data']['data']['uid'],
+               event['data']['data']['username'],
+               event['data']['data']['gift_name'],
+               event['data']['data']['num']
+               )
+        with database.cursor() as cursor:
+            cursor.execute(sql, val)
+        database.commit()
+    except Exception as e:
+        pass
 
 
 async def handle_common_notice(event, database, master_config, room_info):
@@ -102,16 +105,16 @@ async def handle_common_notice(event, database, master_config, room_info):
                                           event['data']['data']['content_segments'][4]['text']).groups()
         else:
             return
-    except KeyError:
-        print("Malformed common notice" + str(event))
+    except Exception as e:
         return
+    sender_uid_result = await name2uid(event['data']['data']['content_segments'][0]['text'])
     sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
     val = (event['room_display_id'],
-           await name2uid(event['data']['data']['content_segments'][0]['text']),
+           sender_uid_result['uid_list'][0]['uid'],
            event['data']['data']['content_segments'][0]['text'],
-           guard_name,
+           '盲盒'+guard_name,
            guard_num
            )
-    with database.cursor as cursor:
+    with database.cursor() as cursor:
         cursor.execute(sql, val)
     database.commit()

@@ -63,7 +63,7 @@ def summarize(room_id: int, database) -> (str, str, datetime, datetime):
     guard_rows = []
     for (uid, guard_name), [username, guard_num_sum] in sum_guard_record.items():
         guard_rows.append("\t".join([
-            username, uid, guard_name, guard_num_sum
+            username, str(uid), str(guard_name), str(guard_num_sum)
         ]))
     sorted(guard_rows)
 
