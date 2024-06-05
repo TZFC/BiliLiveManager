@@ -21,6 +21,7 @@ async def summarize(room_id: int, room_info: dict, database) -> (str, str, datet
         start_time, end_time = result[0]
 
         # 统计直播间发言人
+        top_uid_name_count = None
         if room_info['room_config']["feature_flags"]["checkin"]:
             if not room_info['state']['pre-checkin'] and end_time - start_time > timedelta(minutes=5):
                 await record_checkin(start_time=start_time,
@@ -90,6 +91,9 @@ async def summarize(room_id: int, room_info: dict, database) -> (str, str, datet
 
     if room_info['room_config']["feature_flags"]["checkin"]:
         full_checkin_rows = []
+        if not top_uid_name_count:
+            top_uid_name_count = await get_top_checkin(master_uid=room_info['master_credential'].dedeuserid,
+                                                       room_id=room_id, database=database)
         for uid, name, count in top_uid_name_count:
             if count == room_info['room_config']["checkin_days"]:
                 full_checkin_rows.append("\t".join([
