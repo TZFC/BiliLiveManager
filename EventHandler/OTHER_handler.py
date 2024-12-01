@@ -54,7 +54,8 @@ async def handle_dm_interaction(event, database, master_config, room_info):
                 return
             await record_danmaku(name="他们都在说", received_uid=0,
                                  time=datetime.now().replace(microsecond=0) - timedelta(minutes=1),
-                                 medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE, room_id=room_id,
+                                 medal_room=room_id, medal_level=99, text=content, message_type=TEXT_TYPE,
+                                 room_id=room_id,
                                  danmu_id=event_id, database=database)
             return
         except Exception as e:
@@ -107,12 +108,20 @@ async def handle_common_notice(event, database, master_config, room_info):
             return
     except Exception as e:
         return
-    sender_uid_result = await name2uid(event['data']['data']['content_segments'][0]['text'])
+    sender_uid_result = ''
+    for attempt in range(3):
+        try:
+            sender_uid_result = await name2uid(event['data']['data']['content_segments'][0]['text'])
+            break
+        except:
+            await asyncio.sleep(3)
+    if not sender_uid_result:
+        print(f"name2uid failed for {event['data']['data']['content_segments'][0]['text']}")
     sql = "INSERT INTO guard (room_id, uid, username, guard_name, guard_num) VALUES (%s, %s, %s, %s, %s)"
     val = (event['room_display_id'],
            sender_uid_result['uid_list'][0]['uid'],
            event['data']['data']['content_segments'][0]['text'],
-           '盲盒'+guard_name,
+           '盲盒' + guard_name,
            guard_num
            )
     with database.cursor() as cursor:
