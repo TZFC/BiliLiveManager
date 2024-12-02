@@ -7,7 +7,7 @@ from Utils.UnbanAll import unban_retry
 
 async def ban_with_timeout(live_room: LiveRoom, uid: int, offense: tuple, database):
     try:
-        await live_room.ban_user(uid)
+        await live_room.ban_user(uid, hour = 0)
         select_sql = "SELECT * FROM ban_history WHERE uid = %s and room_id = %s"
         insert_sql = "INSERT INTO ban_history (uid, room_id) VALUES (%s, %s)"
         val = (uid, live_room.room_display_id)
